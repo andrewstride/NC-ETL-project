@@ -1,0 +1,10 @@
+asn1crypto==1.5.1
+iniconfig==2.0.0
+packaging==24.2
+pg8000==1.31.2
+pluggy==1.5.0
+pytest==8.3.3
+python-dateutil==2.9.0.post0
+python-dotenv==1.0.1
+scramp==1.4.5
+six==1.16.0
