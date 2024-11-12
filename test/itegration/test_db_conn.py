@@ -19,7 +19,13 @@ def connect_to_db():
     )
     return connection
 
+# def test_db_connection():
+#     conn = connect_to_db()
+#     assert conn is not None  # Simple test to ensure connection is established
+#     # You can add more assertions or test logic here as needed
+
 def test_db_connection():
     conn = connect_to_db()
-    assert conn is not None  # Simple test to ensure connection is established
-    # You can add more assertions or test logic here as needed
+    if conn is None:
+        raise Exception("Database connection failed")
+    print("Database connection established successfully.")
