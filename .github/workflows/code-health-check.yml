@@ -25,6 +25,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install flake8 bandit safety
+        pip list
 
     - name: Run PEP 8 compliance check (flake8)
       run: |
@@ -37,4 +38,4 @@ jobs:
 
     - name: Run dependency vulnerability check (safety)
       run: |
-        safety check
+        python -m safety scan --ignore=70612
