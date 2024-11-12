@@ -1,17 +1,25 @@
+import pg8000
 import os
-import pg8000 
-import pytest
 
-def test_database_connection():
-    """Test that the database can be connected using the given URL."""
-    database_url = os.getenv("DATABASE_URL")
-    
-    if not database_url:
-        raise ValueError("DATABASE_URL is not set.")  # Raise an explicit exception
+def connect_to_db():
+    # Fetch credentials from environment variables
+    user = os.environ.get('DB_USER')
+    password = os.environ.get('DB_PASSWORD')
+    host = os.environ.get('DB_HOST')
+    port = int(os.environ.get('DB_PORT'))  # Ensure port is an integer
+    database = os.environ.get('DB_NAME')
 
-    try:
-        # Establish a connection using the DATABASE_URL environment variable
-        conn = pg8000.connect(database_url)
-        conn.close()  # Connection successful if this line is reached
-    except Exception as e:
-        pytest.fail(f"Database connection failed: {e}")
+    # Establish the connection using pg8000
+    connection = pg8000.connect(
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        database=database
+    )
+    return connection
+
+def test_db_connection():
+    conn = connect_to_db()
+    assert conn is not None  # Simple test to ensure connection is established
+    # You can add more assertions or test logic here as needed
