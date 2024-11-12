@@ -34,3 +34,7 @@ jobs:
     - name: Run security check (bandit)
       run: |
         bandit -r .
+        
+    - name: Run dependency vulnerability check (safety)
+      run: |
+        safety check
