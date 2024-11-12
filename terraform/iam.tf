@@ -87,3 +87,37 @@ resource "aws_iam_role_policy_attachment" "Cloudwatch_log_attachment_for_lambda1
     role = aws_iam_role.role_for_lambda1.name
     policy_arn = aws_iam_policy.Cloudwatch_log_policy_for_lambda1.arn
 }
+
+
+resource "aws_iam_role_policy" "role_policy_for_lambda1_sns" {
+  name = "role_policy_for_lambda1_sns"
+  role = aws_iam_role.role_for_lambda1
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "sns:Publish",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Action = [
+          "logs:StartQuery",
+          "logs:GetQueryResults",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+      {
+        Action = [
+          "iam:ListAccountAliases",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
