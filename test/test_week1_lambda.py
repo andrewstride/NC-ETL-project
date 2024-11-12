@@ -1,15 +1,22 @@
 from src.week1_lambda import lambda_handler
 from src.utils import get_rows, get_columns
-from src.connection import db_connection
-from test_data import staff_table
-import pytest
-from unittest.mock import patch
+from src.connection import db_connection, get_db_creds
 
-# @pytest.fixture()
-# def mock_connection():
-#     mock_conn = Mock()
-#     mock_conn.return_value = "return"
-#     mock_conn.run('SELECT * FROM staff;')
+
+class TestGetDBCreds:
+    def test_correct_keys_in_dict(self):
+        creds = get_db_creds()
+        keys = list(creds.keys())
+        assert 'username' in keys
+        assert 'password' in keys
+        assert 'host' in keys
+        assert 'port' in keys
+        assert 'dbname' in keys
+
+    def test_values_are_strings(self):
+        creds = get_db_creds()
+        for cred in creds:
+            assert isinstance(creds[cred], str)
 
 class TestGetRows:
     def test_returns_list(self):
@@ -37,3 +44,10 @@ class TestGetColumns:
         conn = db_connection()
         result = get_columns(conn, "staff")
         assert len(result) == 7
+
+# class TestGetTables:
+#     def test_get_tables(self):
+#         conn = db_connection()
+#         tables = get_tables(conn)
+#         print(tables)
+#         assert 1 == 0

@@ -1,7 +1,3 @@
-from src.connection import db_connection
-import pandas as pd
-
-
 def get_rows(connection, table):
     '''
     Returns rows from table
@@ -36,3 +32,11 @@ def get_columns(connection, table):
     conn.run(query)
     columns = [col['name'] for col in conn.columns]
     return columns
+
+# def get_tables(connection):
+#     conn = connection
+#     data = conn.run(""" SELECT table_name 
+#              FROM information_schema.tables 
+#              WHERE table_schema='public' 
+#              AND table_type='BASE TABLE';""")
+#     return data
