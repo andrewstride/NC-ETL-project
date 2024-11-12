@@ -13,7 +13,7 @@ resource "aws_lambda_function" "lambda1" {
     filename = "${var.lambda1_name}.zip"
     role = aws_iam_role.lambda1_role.arn
     handler = "lambda1.lambda_handler"
-    timeout = 30
+    timeout = 180
     source_code_hash = data.archive_file.lambda1_handler_func.output_base64sha256 # check for code updates
     runtime = "python3.12"
 }
