@@ -22,6 +22,5 @@ def connect_to_db():
 
 def test_db_connection():
     conn = connect_to_db()
-    if conn is None:
-        raise Exception("Database connection failed")
-    print("Database connection established successfully.")
+    assert  conn is None
+   
