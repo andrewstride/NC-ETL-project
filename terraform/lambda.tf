@@ -16,6 +16,7 @@ resource "aws_lambda_function" "lambda1" {
     timeout = 180
     source_code_hash = data.archive_file.lambda1_handler_func.output_base64sha256 # check for code updates
     runtime = "python3.12"
+    layers = [aws_lambda_layer_version.layer_for_lambda1.arn]
 }
 
 ## Zip file for lambda1 lambda_handler - getting the python lambda_handler function from the file where it is stored, and zipping it.
