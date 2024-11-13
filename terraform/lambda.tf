@@ -10,8 +10,8 @@
 ## Creating the lambda1 function
 resource "aws_lambda_function" "lambda1" {
     function_name = "${var.lambda1_name}"
-    filename = "${var.lambda1_name}.zip"
-    role = aws_iam_role.lambda1_role.arn
+    filename = "${path.module}/../${var.lambda1_name}.zip"
+    role = aws_iam_role.role_for_lambda1.arn
     handler = "lambda1.lambda_handler"
     timeout = 180
     source_code_hash = data.archive_file.lambda1_handler_func.output_base64sha256 # check for code updates
@@ -21,7 +21,7 @@ resource "aws_lambda_function" "lambda1" {
 ## Zip file for lambda1 lambda_handler - getting the python lambda_handler function from the file where it is stored, and zipping it.
 data "archive_file" "lambda1_handler_func" {
     type = "zip"
-    source_file = var.lambda1_source_file
+    source_dir = var.lambda1_source_dir
     output_path = "${path.module}/../${var.lambda1_name}.zip"
 }
 
