@@ -91,7 +91,7 @@ resource "aws_iam_role_policy_attachment" "Cloudwatch_log_attachment_for_lambda1
 
 resource "aws_iam_role_policy" "role_policy_for_lambda1_sns" {
   name = "role_policy_for_lambda1_sns"
-  role = aws_iam_role.role_for_lambda1
+  role = aws_iam_role.role_for_lambda1.name
 
   policy = jsonencode({
     Version = "2012-10-17"

@@ -3,7 +3,7 @@ variable "lambda1_name" {
   default = "lambda1"
 }
 
-variable "lambda1_source_file" {
+variable "lambda1_source_dir" {
     type = string
-    default = "${path.module}/../src/lambda1.py"
+    default = "../src/"
 }
