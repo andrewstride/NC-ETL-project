@@ -1,6 +1,8 @@
 from src.week1_lambda import lambda_handler
 from src.utils import get_rows, get_columns
 from src.connection import db_connection, get_db_creds
+import logging
+from testfixtures import LogCapture
 
 
 class TestGetDBCreds:
@@ -45,9 +47,10 @@ class TestGetColumns:
         result = get_columns(conn, "staff")
         assert len(result) == 7
 
-# class TestGetTables:
-#     def test_get_tables(self):
-#         conn = db_connection()
-#         tables = get_tables(conn)
-#         print(tables)
-#         assert 1 == 0
+class TestLogger:
+    def test_token_logger(self):
+        with LogCapture() as l:
+            lambda_handler([],{})
+            l.check_present(('root', 'ERROR', 'Houston, we have a major problem'))
+
+           
