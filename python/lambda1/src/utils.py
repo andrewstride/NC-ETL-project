@@ -1,6 +1,16 @@
 from botocore.exceptions import ClientError, ParamValidationError
 import logging
 
+
+def get_tables(connection):
+    conn = connection
+    data = conn.run(""" SELECT table_name 
+             FROM information_schema.tables 
+             WHERE table_schema='public' 
+             AND table_type='BASE TABLE';""")
+    tables_list = [item[0] for item in data if item[0] != '_prisma_migrations']
+    return tables_list
+
 def get_rows(connection, table):
     '''Returns rows from table
 
@@ -13,9 +23,13 @@ def get_rows(connection, table):
         List (list): The lists are rows from table
     '''
     conn = connection
-    query = "SELECT * FROM " + table + ";"
-    data = conn.run(query)
-    return data
+    if table in get_tables(conn):
+        query = "SELECT * FROM " + table + ";"
+        data = conn.run(query)
+        return data
+    else:
+        logging.error("Table not found")
+        return ['Table not found']
 
 def get_columns(connection, table):
     '''Returns columns from table
@@ -29,10 +43,14 @@ def get_columns(connection, table):
         List (list): A list of columns
     '''
     conn = connection
-    query = "SELECT * FROM " + table + ";"
-    conn.run(query)
-    columns = [col['name'] for col in conn.columns]
-    return columns
+    if table in get_tables(conn):
+        query = "SELECT * FROM " + table + ";"
+        conn.run(query)
+        columns = [col['name'] for col in conn.columns]
+        return columns
+    else:
+        logging.error("Table not found")
+        return ['Table not found']
 
 def write_to_s3(s3, bucket_name, filename, format, data):
     '''Writes to s3 bucket
@@ -55,11 +73,3 @@ def write_to_s3(s3, bucket_name, filename, format, data):
         logging.error(e)
         return {"result": "Failure"}
     return {"result": "Success"}
-
-# def get_tables(connection):
-#     conn = connection
-#     data = conn.run(""" SELECT table_name 
-#              FROM information_schema.tables 
-#              WHERE table_schema='public' 
-#              AND table_type='BASE TABLE';""")
-#     return data

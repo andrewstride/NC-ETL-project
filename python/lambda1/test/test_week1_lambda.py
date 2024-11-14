@@ -1,20 +1,10 @@
 from src.week1_lambda import lambda_handler
-from src.utils import get_rows, get_columns, write_to_s3
+from src.utils import get_rows, get_columns, write_to_s3, get_tables
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
 import json
 import boto3
-import pytest
-import os
-
-@pytest.fixture()
-def aws_cred():
-    os.environ["AWS_ACCESS_KEY_ID"] = "test"
-    os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
-    os.environ["AWS_SECURITY_TOKEN"] = "test"
-    os.environ["AWS_SESSION_TOKEN"] = "test"
-    os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
@@ -110,7 +100,17 @@ class TestWriteToS3:
   Parameter validation failed:
 Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types: <class 'bytes'>, <class 'bytearray'>, file-like object""" in str(l)
 
+class TestGetTables:
+    def test_get_tables_returns_list(self):
+        conn = db_connection()
+        tables = get_tables(conn)
+        assert isinstance(tables, list)
 
+    def test_get_tables_returns_tables(self):
+        conn = db_connection()
+        tables = get_tables(conn)
+        assert tables == ['sales_order', 'transaction', 'department', 'staff', 'purchase_order', 'counterparty', 'payment', 'currency', 'payment_type', 'address', 'design']
 
+    
 
            
