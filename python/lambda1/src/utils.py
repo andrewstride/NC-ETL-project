@@ -1,5 +1,6 @@
 from pg8000.exceptions import DatabaseError
 from botocore.exceptions import ClientError, ParamValidationError
+from pg8000.native import identifier
 import logging
 import json
 
@@ -24,8 +25,7 @@ def get_all_rows(conn, table):
         List (list): The lists are rows from table
     '''
     if table in get_tables(conn):
-        query = "SELECT * FROM " + table + ";"
-        data = conn.run(query)
+        data = conn.run(f"SELECT * FROM {identifier(table)};")
         return data
     else:
         logging.error("Table not found")
@@ -43,8 +43,7 @@ def get_columns(conn, table):
         List (list): A list of columns
     '''
     if table in get_tables(conn):
-        query = "SELECT * FROM " + table + ";"
-        conn.run(query)
+        conn.run(f"SELECT * FROM {identifier(table)};")
         columns = [col['name'] for col in conn.columns]
         return columns
     else:
@@ -87,8 +86,7 @@ def fetch_last_timestamps_from_db(conn):
     output_dict = {}
     for table in tables:
         try:
-            query = "SELECT max(last_updated) FROM " + table + ";"
-            data = conn.run(query)
+            data = conn.run(f"SELECT max(last_updated) FROM {identifier(table)};")
             output_dict[table] = f"{data[0][0]}"
         except DatabaseError as e:
             logging.error(e)
@@ -144,8 +142,9 @@ def get_new_rows(conn, table, timestamp):
         List (list): The lists are rows from table
     '''
     if table in get_tables(conn):
-        query = "SELECT * FROM " + table + " WHERE last_updated > to_timestamp(:timestamp, 'YYYY-MM-DD HH24:MI:SS.US');"
-        data = conn.run(query, timestamp=timestamp)
+        data = conn.run(f"""SELECT * FROM {identifier(table)}
+                         WHERE last_updated > to_timestamp(:timestamp,
+                         'YYYY-MM-DD HH24:MI:SS.US');""", timestamp=timestamp)
         return data
     else:
         logging.error("Table not found")
