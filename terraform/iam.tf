@@ -1,20 +1,3 @@
-
-# data "aws_iam_policy_document" "s3_code_bucket_document" {
-#     statement {
-#         actions = ["s3:GetObject"]
-
-#         resources = [
-#             "${aws_s3_bucket.code_bucket.arn}/*"
-#         ]
-#     }
-# }
-
-# resource "aws_iam_role" "" {
-
-# }
-
-
-
 ## Policy document for lambda assume role permission (a way of portraying the JSON)
 data "aws_iam_policy_document" "assume_role_policy" {
     statement {
@@ -89,6 +72,7 @@ resource "aws_iam_role_policy_attachment" "Cloudwatch_log_attachment_for_lambda1
 }
 
 
+## iam policy for sns and attach to lambda1 iam role
 resource "aws_iam_role_policy" "role_policy_for_lambda1_sns" {
   name = "role_policy_for_lambda1_sns"
   role = aws_iam_role.role_for_lambda1.name
@@ -120,4 +104,27 @@ resource "aws_iam_role_policy" "role_policy_for_lambda1_sns" {
       },
     ]
   })
+}
+
+## Policy document for Secrets Manager get secret value permission (a way of portraying the JSON)
+data "aws_iam_policy_document" "get_secret_value_policy" {
+    statement {
+        effect = "Allow"
+
+        actions = ["secretsmanager:GetSecretValue"]
+
+        resources = [ "arn:aws:secretsmanager:eu-west-2:796973515606:secret:totesys-conn-430tOE" ]
+    }
+}
+
+## Policy for lambda1, for lambda1 to get secret value
+resource "aws_iam_policy" "get_secret_value_policy_for_lambda1" {
+    name = "get_secret_value_policy_for_${var.lambda1_name}"
+    policy = data.aws_iam_policy_document.get_secret_value_policy.json
+}
+
+## Attach the get secret value policy to the lambda1 iam role
+resource "aws_iam_role_policy_attachment" "get_secret_value_attachment_for_lambda1" {
+    role = aws_iam_role.role_for_lambda1.name
+    policy_arn = aws_iam_policy.get_secret_value_policy_for_lambda1.arn
 }

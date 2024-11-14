@@ -1,3 +1,4 @@
+## CloudWatch log group for lambda1
 resource "aws_cloudwatch_log_group" "log_group_for_lambda1" {
     name = "/aws/lambda/${var.lambda1_name}_log_group"
 
@@ -10,6 +11,7 @@ resource "aws_cloudwatch_log_group" "log_group_for_lambda1" {
     }
 }
 
+## CloudWatch metric filter for lambda 1
 resource "aws_cloudwatch_log_metric_filter" "log_error_count_metric_for_lambda1" {
     name = "log_errors_count_metric_for_${var.lambda1_name}"
     pattern = "ERROR"
@@ -22,6 +24,7 @@ resource "aws_cloudwatch_log_metric_filter" "log_error_count_metric_for_lambda1"
     }
 }
 
+## CloudWatch metric alarm for lambda1
 resource "aws_cloudwatch_metric_alarm" "error_count_alarm_for_lambda1" {
     alarm_name = "error_count_alarm_for_${var.lambda1_name}"
     comparison_operator = "GreaterThanThreshold"
