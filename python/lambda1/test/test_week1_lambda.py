@@ -1,10 +1,11 @@
 from src.week1_lambda import lambda_handler
-from src.utils import get_rows, get_columns, write_to_s3, get_tables
+from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamps_from_db, read_timestamps_table_from_s3, tables_and_timestamps_to_query, get_new_rows
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
 import json
 import boto3
+import pytest
 
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
@@ -24,17 +25,17 @@ class TestGetDBCreds:
 class TestGetRows:
     def test_returns_list(self):
         conn = db_connection()
-        assert isinstance(get_rows(conn, "staff"), list)
+        assert isinstance(get_all_rows(conn, "staff"), list)
 
     def test_contains_lists(self):
         conn = db_connection()
-        result = get_rows(conn, "staff")
+        result = get_all_rows(conn, "staff")
         for row in result:
             assert isinstance(row, list)
 
     def test_correct_no_of_columns(self):
         conn = db_connection()
-        result = get_rows(conn, "staff")
+        result = get_all_rows(conn, "staff")
         for row in result:
             assert len(row) == 7
 
@@ -111,6 +112,87 @@ class TestGetTables:
         tables = get_tables(conn)
         assert tables == ['sales_order', 'transaction', 'department', 'staff', 'purchase_order', 'counterparty', 'payment', 'currency', 'payment_type', 'address', 'design']
 
-    
 
-           
+class TestFetchLastTimestamp:
+    def test_returns_dict(self):
+        conn = db_connection()
+        output = fetch_last_timestamps_from_db(conn)
+        assert isinstance(output, dict)
+
+    def test_all_tables_in_output(self):
+        conn = db_connection()
+        output = fetch_last_timestamps_from_db(conn)
+        tables = get_tables(conn)
+        for table in tables:
+            assert table in list(output.keys())
+
+
+class TestWritingTimestampTableToCSV:
+    def test_file_created_and_readable_to_dict(self):
+        conn = db_connection()
+        timestamp_dict = fetch_last_timestamps_from_db(conn)
+        with open('test/test_timestamp_table.json', 'w') as f:
+            f.write(json.dumps(timestamp_dict))
+        with open('test/test_timestamp_table.json', 'r') as f:
+            contents = json.load(f)
+        assert type(contents) == type(timestamp_dict)
+
+class TestReadTimestampsFromS3:
+    @mock_aws
+    def test_returns_inputted_data(self):
+        data = json.dumps({'sales_order': '2024-11-14 10:19:09.990000', 'transaction': '2024-11-14 10:19:09.990000', 'department': '2022-11-03 14:20:49.962000', 'staff': '2022-11-03 14:20:51.563000', 'purchase_order': '2024-11-14 09:11:09.922000', 'counterparty': '2022-11-03 14:20:51.563000', 'payment': '2024-11-14 10:19:09.990000', 'currency': '2022-11-03 14:20:49.962000', 'payment_type': '2022-11-03 14:20:49.962000', 'address': '2022-11-03 14:20:49.962000', 'design': '2024-11-14 09:41:09.839000'})
+        client = boto3.client('s3')
+        client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
+        'LocationConstraint': 'eu-west-2'})
+        s3 = boto3.resource('s3')
+        write_to_s3(s3, 'test-bucket', 'timestamp_table', 'json', data)
+        output = read_timestamps_table_from_s3(client, 'test-bucket', 'timestamp_table.json')
+        assert output == json.loads(data)
+        assert isinstance(output, dict)
+
+    @mock_aws
+    def test_handles_no_such_bucket_error(self):
+        client = boto3.client('s3')
+        with LogCapture() as l:
+            output = read_timestamps_table_from_s3(client, 'test-bucket', 'timestamp_table.json')
+            assert output['result'] == "Failure"
+            assert """root ERROR
+  An error occurred (NoSuchBucket) when calling the GetObject operation: The specified bucket does not exist""" in (str(l))
+            
+    @mock_aws
+    def test_handles_key_not_found_error(self):
+        client = boto3.client('s3')
+        client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
+        'LocationConstraint': 'eu-west-2'})
+        with LogCapture() as l:
+            output = read_timestamps_table_from_s3(client, 'test-bucket', 'timestamp_table.json')
+            assert output['result'] == "Failure"
+            assert """root ERROR
+  An error occurred (NoSuchKey) when calling the GetObject operation: The specified key does not exist.""" in (str(l))
+
+class TestTablesAndTimestampsToQuery:
+    def test_returns_dict(self):
+        assert isinstance(tables_and_timestamps_to_query({},{}), dict)
+    
+    def test_finds_tables_to_update(self):
+        s3_table = {'sales_order': '2023-11-14 10:19:09.990000', 'transaction': '2024-11-14 10:19:09.990000', 'department': '2022-11-03 14:20:49.962000', 'staff': '2022-11-03 14:20:51.563000', 'purchase_order': '2024-11-14 09:11:09.922000', 'counterparty': '2022-11-03 14:20:51.563000', 'payment': '2024-11-14 10:19:09.990000', 'currency': '2022-11-03 14:20:49.962000', 'payment_type': '2022-11-03 14:20:49.962000', 'address': '2022-11-03 14:20:49.962000', 'design': '2024-11-14 09:41:09.839000'}
+        db_table = {'sales_order': '2024-11-14 10:19:09.990000', 'transaction': '2024-11-14 10:19:09.990000', 'department': '2022-11-03 14:20:49.962000', 'staff': '2022-11-03 14:20:51.563000', 'purchase_order': '2024-11-14 09:11:09.922000', 'counterparty': '2022-11-03 14:20:51.563000', 'payment': '2024-11-14 10:19:09.990000', 'currency': '2022-11-03 14:20:49.962000', 'payment_type': '2022-11-03 14:20:49.962000', 'address': '2022-11-03 14:20:49.962000', 'design': '2024-11-14 09:41:09.839000'}
+        output = tables_and_timestamps_to_query(db_table, s3_table)
+        assert output == {'sales_order': '2023-11-14 10:19:09.990000'}
+
+    def test_handles_key_error(self):
+        s3_table = {'staff': '2023-11-14 10:19:09.990000', 'sales_order': '2023-11-14 10:19:09.990000'}
+        db_table = {'staff': '2024-11-14 10:19:09.990000', 'test': 'test'}
+        with LogCapture() as l:
+            output = tables_and_timestamps_to_query(db_table, s3_table)
+            assert str({'KeyError': "'test'"}) in str(l)
+        assert output == {'staff': '2023-11-14 10:19:09.990000'}
+
+class TestGetNewRows:
+    def test_get_new_rows_returns_list_of_lists(self):
+        conn = db_connection()
+        output = get_new_rows(conn, 'staff', '2013-11-14 10:19:09.990000')
+        assert isinstance(output, list)
+        for item in output:
+            assert isinstance(item, list)
+
