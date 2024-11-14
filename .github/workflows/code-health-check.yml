@@ -57,7 +57,7 @@ jobs:
         DB_PORT: ${{ secrets.PORT }}
         DB_NAME: ${{ secrets.DBNAME }}
       run: |
-        pytest tests/integration/test_db_conn.py
+        pytest test/integration/test_db_conn.py
 
 
     - name: Test with pytest
