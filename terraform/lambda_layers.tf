@@ -8,19 +8,11 @@ resource "null_resource" "create_dependencies" {
     }
 }
 
-## prevent archive_file taking place before "create_dependencies occurs"
-data "null_data_source" "wait_for_create_dependencies" {
-  inputs = {
-    create_dependencies_id = "${null_resource.create_dependencies.id}"
-    source_dir = "${path.module}/${var.lambda1_layer_deployment_dir}"
-  }
-}
 ## zip file for lambda1 layer - getting the dependecies file locally and zipping it
 data "archive_file" "layer_code_for_lambda1" {
     type = "zip"
     output_path = "${path.module}/../terraform-remote-deployment/lambda1_layer.zip"
-    source_dir  = "${data.null_data_source.wait_for_create_dependencies.outputs["source_dir"]}"
-    #source_dir = "${path.module}/${var.lambda1_layer_deployment_dir}"
+    source_dir = "${path.module}/${var.lambda1_layer_deployment_dir}"
 }
 
 ## Create lambda1 layer from the zip file

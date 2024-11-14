@@ -19,5 +19,5 @@ variable "lambda1_layer_deployment_dir" {
 ## Source directory for lambda1
 variable "lambda1_source_dir" {
     type = string
-    default = "../src"
+    default = "../python/lambda1"
 }
