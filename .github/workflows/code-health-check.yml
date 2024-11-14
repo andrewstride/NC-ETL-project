@@ -5,10 +5,13 @@ on:
     branches:
       - CICD/-MKDIR-and-YML-files  
       - main
+      - CICD-test-py
   pull_request:
     branches:
       - CICD/-MKDIR-and-YML-files 
       - main
+      - CICD-test-py
+
 
 jobs:
   lint_and_security:
