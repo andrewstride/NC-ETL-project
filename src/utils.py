@@ -1,6 +1,7 @@
 from pg8000.exceptions import DatabaseError
 from botocore.exceptions import ClientError, ParamValidationError
 import logging
+import json
 
 
 def get_tables(conn):
@@ -72,7 +73,16 @@ def write_to_s3(s3, bucket_name, filename, format, data):
         return {"result": "Failure"}
     return {"result": "Success"}
 
-def fetch_last_timestamp(conn):
+def fetch_last_timestamps_from_db(conn):
+    '''Fetches latest timestamp from db
+
+    Parameters: 
+        Connection: PG8000 Connection to database
+
+    Returns:
+        Dictionary of {'Table Name': 'Timestamp string'}
+
+    '''
     tables = get_tables(conn)
     output_dict = {}
     for table in tables:
@@ -84,7 +94,23 @@ def fetch_last_timestamp(conn):
             logging.error(e)
     return output_dict
 
-# func: read timestamp table from s3
+def read_timestamps_table_from_s3(s3, bucket_name, filename):
+    '''Reads file from given s3 bucket
+    
+    Parameters:
+        s3: Boto3.client('s3') connection
+        Bucket Name (str)
+        File Name (str)
+
+    Returns:
+        Dictionary of format {'Table Name':'Timestamp String'}
+    '''
+    response = s3.get_object(Bucket=bucket_name, Key=filename)
+    body = response['Body']
+    return json.loads(body.read().decode())
+
+
+
 # func: compare the timestamps from db and table:
     # return a list of tables where timestamp differs
 # use list of tables to query relevant tables, with WHERE last_updated > stmt
