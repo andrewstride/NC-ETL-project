@@ -20,5 +20,6 @@ terraform/init.sh
 zen.txt
 *.tfstate*
 .env
-dependencies*
-packages*
+
+#area for files to be deployed to AWS
+terraform-remote-deployment/
