@@ -31,6 +31,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 bandit safety
         pip install pytest
+        pip install -r requirements.txt
 
     - name: Run PEP 8 compliance check (flake8)
       run: |
