@@ -7,5 +7,5 @@ variable "lambda1_name" {
 ## Source directory for lambda1
 variable "lambda1_source_dir" {
     type = string
-    default = "../src/"
+    default = "../terraform-remote-deployment/lambda1"
 }
