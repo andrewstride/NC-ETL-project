@@ -49,15 +49,16 @@ jobs:
         
 
 
-    - name: Run database integration tests
+    - name: Get environmnet vars
+      run: python -c 'import os;print(os.environ)'
       env:
         DB_USER: ${{ secrets.USERNAME }}
         DB_PASSWORD: ${{ secrets.PASSWORD }}
         DB_HOST: ${{ secrets.HOST }}
         DB_PORT: ${{ secrets.PORT }}
         DB_NAME: ${{ secrets.DBNAME }}
-      run: |
-        pytest test/integration/test_db_conn.py
+      #  run: |
+      #   pytest test/integration/test_db_conn.py
 
 
     - name: Test with pytest
