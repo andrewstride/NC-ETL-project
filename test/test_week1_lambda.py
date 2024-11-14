@@ -1,5 +1,5 @@
 from src.week1_lambda import lambda_handler
-from src.utils import get_rows, get_columns, write_to_s3, get_tables
+from src.utils import get_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamp
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
@@ -111,6 +111,27 @@ class TestGetTables:
         tables = get_tables(conn)
         assert tables == ['sales_order', 'transaction', 'department', 'staff', 'purchase_order', 'counterparty', 'payment', 'currency', 'payment_type', 'address', 'design']
 
-    
+class TestFetchLastTimestamp:
+    def test_returns_dict(self):
+        conn = db_connection()
+        output = fetch_last_timestamp(conn)
+        assert isinstance(output, dict)
 
+    def test_all_tables_in_output(self):
+        conn = db_connection()
+        output = fetch_last_timestamp(conn)
+        tables = get_tables(conn)
+        for table in tables:
+            assert table in list(output.keys())
+
+    
+class TestWritingTimestampTableToCSV:
+    def test_file_created_and_readable_to_dict(self):
+        conn = db_connection()
+        timestamp_dict = fetch_last_timestamp(conn)
+        with open('test/test_timestamp_table.json', 'w') as f:
+            f.write(json.dumps(timestamp_dict))
+        with open('test/test_timestamp_table.json', 'r') as f:
+            contents = json.load(f)
+        assert type(contents) == type(timestamp_dict)
            

@@ -21,3 +21,4 @@ zen.txt
 *.tfstate*
 .env
 dependencies
+test/test_timestamp_table.json
