@@ -59,7 +59,6 @@ class TestLogger:
             lambda_handler([],{})
             l.check_present(('root', 'ERROR', 'Houston, we have a major problem'))
 
-@pytest.mark.skip
 class TestWriteToS3:
     @mock_aws
     def test_returns_dict(self):

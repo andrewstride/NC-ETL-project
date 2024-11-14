@@ -140,7 +140,6 @@ def get_new_rows(conn, table, timestamp):
         Table (str): Table name to access in database
         Timestamp (str): format 'YYYY-MM-DD HH24:MI:SS.US'
 
-
     Returns:
         List (list): The lists are rows from table
     '''
@@ -157,4 +156,6 @@ def get_new_rows(conn, table, timestamp):
 # append s3 data with new data
 # write latest timestamps to timestamp table
 
-# Change file structure to match main branch
+# Change file structure to match main branch before merge
+
+# pg8000.native import identifier
