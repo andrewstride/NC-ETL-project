@@ -46,20 +46,6 @@ jobs:
       uses: pyupio/safety-action@v1
       with:
         api-key: ${{ secrets.SAFETY_API_KEY }}
-        
-
-
-    - name: Get environmnet vars
-      run: python -c 'import os;print(os.environ)'
-      env:
-        DB_USER: ${{ secrets.USERNAME }}
-        DB_PASSWORD: ${{ secrets.PASSWORD }}
-        DB_HOST: ${{ secrets.HOST }}
-        DB_PORT: ${{ secrets.PORT }}
-        DB_NAME: ${{ secrets.DBNAME }}
-      #  run: |
-      #   pytest test/integration/test_db_conn.py
-
 
     - name: Test with pytest
       run: |
