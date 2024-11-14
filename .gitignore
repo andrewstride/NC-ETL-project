@@ -1,22 +1,18 @@
-**/serverless-output.*
-**/.DS_Store
-temp/
-.DS_Store
-serverless-output.yaml
-**/results.xml
-**/.vscode/
-**/build/
-**/dist/
-**/*egg*
-**/*.pyc
-**/.vscode
-**/*_cache
-**/*pycache
-*coverage*
+#environment
 venv/
-*.zip
+.env
+
+#python and pytest
+**/*pycache
+**/*.pyc
+
+#terraform
 **/.terraform*
 terraform/init.sh
-zen.txt
 *.tfstate*
-.env
+
+#area for files to be deployed to AWS
+terraform-remote-deployment/
+
+*.zip
+
