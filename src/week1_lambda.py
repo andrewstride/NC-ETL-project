@@ -1,5 +1,5 @@
 from src.connection import db_connection
-from src.utils import get_rows, get_columns, write_to_s3
+from src.utils import get_rows, get_columns, write_to_s3, get_tables
 import logging
 import boto3
 import json
