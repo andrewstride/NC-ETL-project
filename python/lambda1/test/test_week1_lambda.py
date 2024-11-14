@@ -7,7 +7,6 @@ import json
 import boto3
 import pytest
 
-@pytest.mark.skip
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
         creds = get_db_creds()
@@ -23,7 +22,6 @@ class TestGetDBCreds:
         for cred in creds:
             assert isinstance(creds[cred], str)
 
-@pytest.mark.skip
 class TestGetRows:
     def test_returns_list(self):
         conn = db_connection()
@@ -41,7 +39,6 @@ class TestGetRows:
         for row in result:
             assert len(row) == 7
 
-@pytest.mark.skip
 class TestGetColumns:
     def test_returns_list(self):
         conn = db_connection()
@@ -52,7 +49,6 @@ class TestGetColumns:
         result = get_columns(conn, "staff")
         assert len(result) == 7
 
-@pytest.mark.skip
 class TestLogger:
     def test_token_logger(self):
         with LogCapture() as l:
@@ -105,7 +101,6 @@ class TestWriteToS3:
   Parameter validation failed:
 Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types: <class 'bytes'>, <class 'bytearray'>, file-like object""" in str(l)
 
-@pytest.mark.skip
 class TestGetTables:
     def test_get_tables_returns_list(self):
         conn = db_connection()
@@ -118,7 +113,6 @@ class TestGetTables:
         assert tables == ['sales_order', 'transaction', 'department', 'staff', 'purchase_order', 'counterparty', 'payment', 'currency', 'payment_type', 'address', 'design']
 
 
-@pytest.mark.skip
 class TestFetchLastTimestamp:
     def test_returns_dict(self):
         conn = db_connection()
@@ -133,7 +127,6 @@ class TestFetchLastTimestamp:
             assert table in list(output.keys())
 
 
-@pytest.mark.skip
 class TestWritingTimestampTableToCSV:
     def test_file_created_and_readable_to_dict(self):
         conn = db_connection()
@@ -144,7 +137,6 @@ class TestWritingTimestampTableToCSV:
             contents = json.load(f)
         assert type(contents) == type(timestamp_dict)
 
-@pytest.mark.skip
 class TestReadTimestampsFromS3:
     @mock_aws
     def test_returns_inputted_data(self):
@@ -178,7 +170,6 @@ class TestReadTimestampsFromS3:
             assert """root ERROR
   An error occurred (NoSuchKey) when calling the GetObject operation: The specified key does not exist.""" in (str(l))
 
-@pytest.mark.skip
 class TestTablesAndTimestampsToQuery:
     def test_returns_dict(self):
         assert isinstance(tables_and_timestamps_to_query({},{}), dict)

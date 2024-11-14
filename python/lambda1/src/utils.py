@@ -153,7 +153,7 @@ def get_new_rows(conn, table, timestamp):
 
 
 
-# append s3 data with new data
+# func: read s3 data and reupload with new data added
 # write latest timestamps to timestamp table
 
 # Change file structure to match main branch before merge
