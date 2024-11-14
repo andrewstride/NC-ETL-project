@@ -50,7 +50,7 @@ data "aws_iam_policy_document" "Cloudwatch_log_document" {
         effect = "Allow"
 
         actions = [
-            "logs:CreateLogGroup",
+            # "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents"
             ]
