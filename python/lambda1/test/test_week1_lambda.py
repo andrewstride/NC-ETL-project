@@ -1,5 +1,5 @@
 from src.week1_lambda import lambda_handler
-from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamps_from_db, read_timestamps_table_from_s3, tables_and_timestamps_to_query, get_new_rows, reformat_data
+from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamps_from_db, read_timestamps_table_from_s3, tables_and_timestamps_to_query, get_new_rows, csv_reformat_and_upload
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
@@ -58,7 +58,7 @@ class TestLogger:
 class TestWriteToS3:
     @mock_aws
     def test_returns_dict(self):
-        s3 = boto3.resource('s3')
+        s3 = boto3.client('s3')
         data = json.dumps({'test':'data'})
         client = boto3.client('s3')
         client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
@@ -67,7 +67,7 @@ class TestWriteToS3:
 
     @mock_aws
     def test_writes_file(self):
-        s3 = boto3.resource('s3')
+        s3 = boto3.client('s3')
         data = json.dumps({'test':'data'})
         client = boto3.client('s3')
         client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
@@ -79,7 +79,7 @@ class TestWriteToS3:
 
     @mock_aws
     def test_handles_no_such_bucket_error(self):
-        s3 = boto3.resource('s3')
+        s3 = boto3.client('s3')
         data = json.dumps({'test':'data'})
         with LogCapture() as l:
             output = write_to_s3(s3, 'non-existant-bucket', 'test-file', 'csv', data)
@@ -89,7 +89,7 @@ class TestWriteToS3:
 
     @mock_aws
     def test_handles_filename_error(self):
-        s3 = boto3.resource('s3')
+        s3 = boto3.client('s3')
         data = True
         client = boto3.client('s3')
         client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
@@ -112,7 +112,6 @@ class TestGetTables:
         tables = get_tables(conn)
         assert tables == ['sales_order', 'transaction', 'department', 'staff', 'purchase_order', 'counterparty', 'payment', 'currency', 'payment_type', 'address', 'design']
 
-
 class TestFetchLastTimestamp:
     def test_returns_dict(self):
         conn = db_connection()
@@ -125,7 +124,6 @@ class TestFetchLastTimestamp:
         tables = get_tables(conn)
         for table in tables:
             assert table in list(output.keys())
-
 
 class TestWritingTimestampTableToCSV:
     def test_file_created_and_readable_to_dict(self):
@@ -144,7 +142,7 @@ class TestReadTimestampsFromS3:
         client = boto3.client('s3')
         client.create_bucket(Bucket='test-bucket', CreateBucketConfiguration={
         'LocationConstraint': 'eu-west-2'})
-        s3 = boto3.resource('s3')
+        s3 = boto3.client('s3')
         write_to_s3(s3, 'test-bucket', 'timestamp_table', 'json', data)
         output = read_timestamps_table_from_s3(client, 'test-bucket', 'timestamp_table.json')
         assert output == json.loads(data)
@@ -189,17 +187,83 @@ class TestTablesAndTimestampsToQuery:
         assert output == {'staff': '2023-11-14 10:19:09.990000'}
 
 class TestGetNewRows:
-    def test_get_new_rows_returns_list_of_lists(self):
+    def test_csv_reformat_and_upload_returns_list_of_lists(self):
         conn = db_connection()
         output = get_new_rows(conn, 'staff', '2013-11-14 10:19:09.990000')
         assert isinstance(output, list)
         for item in output:
             assert isinstance(item, list)
 
+
 class TestReformatData:
-    def test_reformat_data_returns_a_string(self):
+    def test_returns_a_dict_with_result_key(self):
         conn = db_connection()
-        test_rows = 
-        test_columns = 
-        test_name = 
-        output = reformat_data(conn, )
+        test_rows = get_all_rows(conn, "staff")
+        test_columns = get_columns(conn, "staff")
+        test_name = "staff"
+        with mock_aws():
+            client = boto3.client("s3")
+            test_bucket = 'nc-terraformers-ingestion'
+            client.create_bucket(Bucket=test_bucket,
+                                 CreateBucketConfiguration={
+                                    'LocationConstraint': 'eu-west-2'})
+            output = csv_reformat_and_upload(client, test_rows,
+                                             test_columns, test_name)
+            assert isinstance(output, dict)
+            assert isinstance(output["result"], str)
+
+    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self):
+        conn = db_connection()
+        test_rows = get_all_rows(conn, "staff")
+        test_columns = get_columns(conn, "staff")
+        test_name = "staff"
+        with mock_aws():
+            client = boto3.client("s3")
+            test_bucket = 'nc-terraformers-ingestion'
+            client.create_bucket(Bucket=test_bucket,
+                                 CreateBucketConfiguration={
+                                    'LocationConstraint': 'eu-west-2'})
+            csv_reformat_and_upload(client, test_rows,
+                                    test_columns, test_name)
+            response = client.list_objects_v2(
+                     Bucket=test_bucket).get("Contents")
+            bucket_files = [file['Key'] for file in response]
+            if test_name in bucket_files:
+                get_file = client.get_object(Bucket=test_bucket,
+                                             Key=test_name)
+                assert get_file['ContentType'] == "csv"
+
+    def test_uploads_to_s3_bucket(self):
+        conn = db_connection()
+        test_rows = get_all_rows(conn, "staff")
+        test_columns = get_columns(conn, "staff")
+        test_name = "staff"
+        with mock_aws():
+            client = boto3.client("s3")
+            test_bucket = 'nc-terraformers-ingestion'
+            client.create_bucket(Bucket=test_bucket,
+                                 CreateBucketConfiguration={
+                                  'LocationConstraint': 'eu-west-2'})
+            output = csv_reformat_and_upload(client, test_rows,
+                                             test_columns, test_name)
+            assert output == {
+                    "result": "Success",
+                    "detail": "Converted to csv, uploaded to ingestion bucket"}
+            response = client.list_objects_v2(
+                     Bucket=test_bucket).get("Contents")
+            bucket_files = [file['Key'] for file in response]
+            assert f"{test_name}.csv" in bucket_files
+
+    def test_handles_error(self):
+        test_rows = ""
+        test_columns = ""
+        test_name = ""
+        with mock_aws():
+            client = boto3.client("s3")
+            test_bucket = 'nc-terraformers-ingestion'
+            client.create_bucket(Bucket=test_bucket,
+                                 CreateBucketConfiguration={
+                                  'LocationConstraint': 'eu-west-2'})
+            output = csv_reformat_and_upload(client, test_rows,
+                                             test_columns, test_name)
+            assert output == {"result": "Failure"}

@@ -2,6 +2,8 @@ from pg8000.exceptions import DatabaseError
 from botocore.exceptions import ClientError, ParamValidationError
 import logging
 import json
+import pandas as pd
+from io import StringIO
 
 
 def get_tables(conn):
@@ -55,7 +57,7 @@ def write_to_s3(s3, bucket_name, filename, format, data):
     '''Writes to s3 bucket
 
      Parameters:
-        s3: Boto3.resource('s3') connection,
+        s3: Boto3.client's3') connection,
         Bucket Name (str): Bucket name to write to
         Filename (str): Filename to write
         Format (str): Format to write
@@ -65,9 +67,11 @@ def write_to_s3(s3, bucket_name, filename, format, data):
         Dict (dict): {"result": "Failure/Success"}
     '''
     try:
-        s3_key = f"{filename}.{format}"
-        object = s3.Object(bucket_name, s3_key)
-        object.put(Body=data)
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=f'{filename}.{format}',
+            Body=data
+        )
     except (ClientError, ParamValidationError) as e:
         logging.error(e)
         return {"result": "Failure"}
@@ -152,28 +156,36 @@ def get_new_rows(conn, table, timestamp):
         return ['Table not found']
 
 
-
-# func: read s3 data and reupload with new data added
-
-def reformat_data(conn, rows, columns, table_name):
+def csv_reformat_and_upload(s3, rows, columns, table_name):
     '''Takes rows, columns, and name of a table, converts it
     to csv file format, and uploads the file to s3 Ingestion bucket.
 
-    Paramaters: 
+    Paramaters:
         s3: Boto3.client('s3') connection
-        Rows (list): the rows of the table
-        Columns (list of lists): the columns of the table
+        Rows (list of lists): the rows of the table
+        Columns (list): the columns of the table
         Table_name (str): the name of the table
 
     Returns:
-        A message (str) saying whether the upload was successful.
-    
+        Dict (dict): {"result": "Failure/Success"} + "detail" if successful.
     '''
-    pass
-
+    try:
+        df = pd.DataFrame(rows, columns=columns)
+        with StringIO() as csv:
+            df.to_csv(csv, index=False)
+            data = csv.getvalue()
+            response = write_to_s3(s3, 'nc-terraformers-ingestion',
+                                   table_name, "csv", data)
+            if response["result"] == "Success":
+                return {
+                    "result": "Success",
+                    "detail": "Converted to csv, uploaded to ingestion bucket"
+                }
+    except Exception:
+        pass
+    return {"result": "Failure"}
 
 # write latest timestamps to timestamp table
-
 
 # Change file structure to match main branch before merge
 
