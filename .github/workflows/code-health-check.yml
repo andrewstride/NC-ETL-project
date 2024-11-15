@@ -22,7 +22,7 @@ jobs:
       
     - name: Checkout code
       uses: actions/checkout@v3
-
+      
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -34,7 +34,9 @@ jobs:
         pip install flake8 bandit
         pip install pytest
         pip install -r requirements.txt
-
+    - name: PipAudit
+    - uses: pypa/gh-action-pip-audit@v1.1.0
+    
     - name: Run PEP 8 compliance check (flake8)
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
@@ -58,11 +60,3 @@ jobs:
       run: |
           echo $PYTHONPATH
           pytest
-
-  pip-audit:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: pypa/gh-action-pip-audit@v1.0.0
-        with:
-          inputs: requirements.txt
