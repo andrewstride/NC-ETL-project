@@ -3,6 +3,7 @@ from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
+from unittest.mock import patch
 import json
 import boto3
 import pytest
@@ -196,3 +197,16 @@ class TestGetNewRows:
         for item in output:
             assert isinstance(item, list)
 
+@pytest.mark.skip
+class TestLambdaHandler:
+    # @mock_aws
+    def test_returns_200_response(self):
+        client = boto3.client('s3')
+        # client.create_bucket(Bucket='nc-terraformers-ingestion', CreateBucketConfiguration={
+        # 'LocationConstraint': 'eu-west-2'})
+        output = lambda_handler({}, {})
+        assert output == {'response': 200}
+        response = client.list_objects(Bucket='nc-terraformers-ingestion')
+        for item in response['Contents']:
+            print(item['Key'])
+        assert response == 1
