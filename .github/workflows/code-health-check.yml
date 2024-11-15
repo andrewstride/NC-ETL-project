@@ -16,10 +16,6 @@ on:
 jobs:
   lint_and_security:
     runs-on: ubuntu-latest
-    permissions:
-        id-token: write
-    
-        
     steps:
     - name: Set pythonpath
       run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
