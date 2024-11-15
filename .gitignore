@@ -6,6 +6,7 @@ venv/
 **/*pycache
 **/*.pyc
 *test_timestamp_table.json*
+*.coverage*
 
 #terraform
 **/.terraform*

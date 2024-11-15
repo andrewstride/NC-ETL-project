@@ -1,0 +1,9 @@
+boto3==1.35.58
+pandas==2.2.3
+pg8000==1.31.2
+pip_audit==2.7.3
+pytest==8.3.3
+pytest-cov==6.0.0
+PyYAML==6.0.2
+testfixtures==8.3.0
+moto==5.0.20
