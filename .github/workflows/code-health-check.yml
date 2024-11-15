@@ -58,7 +58,7 @@ jobs:
       with:
         audience: sts.amazonaws.com
         aws-region: eu-west-2
-        role-to-assume: arn:aws:iam::796973515606:oidc-provider/token.actions.githubusercontent.com
+        role-to-assume: ${{ secrets.AWS_ROLE_SECRET }}
         
     - name: Set pythonpath
       run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
