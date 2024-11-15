@@ -16,18 +16,9 @@ on:
 jobs:
   lint_and_security:
     runs-on: ubuntu-latest
-    permissions:
-        id-token: write
+    
         
     steps:
-    - name: AWS Creds
-      uses: aws-actions/configure-aws-credentials@v4
-      
-      with:
-        audience: sts.amazonaws.com
-        aws-region: eu-west-2
-        role-to-assume: arn:aws:iam::796973515606:oidc-provider/token.actions.githubusercontent.com
-    
     - name: Set pythonpath
       run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
       
@@ -55,6 +46,23 @@ jobs:
       run: |
         bandit . -s B108
 
+  pytest:
+    runs-on: ubuntu-latest
+    permissions:
+        id-token: write
+    
+    steps:  
+    - name: AWS Creds
+      uses: aws-actions/configure-aws-credentials@v4
+      
+      with:
+        audience: sts.amazonaws.com
+        aws-region: eu-west-2
+        role-to-assume: arn:aws:iam::796973515606:oidc-provider/token.actions.githubusercontent.com
+        
+    - name: Set pythonpath
+      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
+      
     - name: Test with pytest
       run: |
           echo $PYTHONPATH
