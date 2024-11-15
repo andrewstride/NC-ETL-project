@@ -18,7 +18,7 @@ logger = logging.getLogger()
 def lambda_handler(event, context):
     try:
         conn = db_connection()
-        s3 = boto3.resource("s3")
+        s3 = boto3.client("s3")
         timestamp_dict = json.dumps(fetch_last_timestamps_from_db(conn))
         write_to_s3(
             s3, "nc-terraformers-ingestion", "timestamp_table", "json", timestamp_dict
