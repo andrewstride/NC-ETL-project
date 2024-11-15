@@ -18,8 +18,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: AWS Creds
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        audience: sts.amazonaws.com
+        aws-region: eu-west-2
+        role-to-assume: arn:aws:iam::796973515606:oidc-provider/token.actions.githubusercontent.com
+    
     - name: Set pythonpath
       run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
+      
     - name: Checkout code
       uses: actions/checkout@v3
 
