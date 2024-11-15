@@ -18,6 +18,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Set pythonpath
+      run: |
+      WD=$(pwd)
+      echo "PYTHONPATH=$WD/python/lambda" >> "$GITHUB_ENV"
     - name: Checkout code
       uses: actions/checkout@v3
 
