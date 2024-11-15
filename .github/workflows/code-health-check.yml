@@ -40,7 +40,7 @@ jobs:
 
     - name: Run security check (bandit)
       run: |
-        bandit -r . -s B108
+        bandit . -s B108
 
     - name: Run dependency vulnerability check (safety)
       uses: pyupio/safety-action@v1
