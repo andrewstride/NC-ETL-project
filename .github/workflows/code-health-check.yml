@@ -16,10 +16,13 @@ on:
 jobs:
   lint_and_security:
     runs-on: ubuntu-latest
-
+    permissions:
+        id-token: write
+        
     steps:
     - name: AWS Creds
       uses: aws-actions/configure-aws-credentials@v4
+      
       with:
         audience: sts.amazonaws.com
         aws-region: eu-west-2
