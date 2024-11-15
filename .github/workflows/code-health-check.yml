@@ -43,9 +43,9 @@ jobs:
         bandit . -s B108
 
     - name: Run dependency vulnerability check (safety)
-      uses: pyupio/safety-action@v3
+      uses: pyupio/safety-action@v1
       with:
-        token: ${{ secrets.SAFETY_API_KEY }}
+        api-key: ${{ secrets.SAFETY_API_KEY }}
         args: >
           --full-report
           -i 2019-8341
