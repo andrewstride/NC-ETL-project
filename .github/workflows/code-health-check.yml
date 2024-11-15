@@ -48,7 +48,7 @@ jobs:
         api-key: ${{ secrets.SAFETY_API_KEY }}
         args: >
           --full-report
-          -i 70212
+          -i 71591
 
     - name: Test with pytest
       run: |
