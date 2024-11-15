@@ -34,8 +34,9 @@ jobs:
         pip install flake8 bandit
         pip install pytest
         pip install -r requirements.txt
+        
     - name: PipAudit
-    - uses: pypa/gh-action-pip-audit@v1.1.0
+      uses: pypa/gh-action-pip-audit@v1.1.0
     
     - name: Run PEP 8 compliance check (flake8)
       run: |
