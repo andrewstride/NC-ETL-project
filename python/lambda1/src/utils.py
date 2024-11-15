@@ -72,11 +72,7 @@ def write_to_s3(s3, bucket_name, filename, format, data):
         Dict (dict): {"result": "Failure/Success"}
     """
     try:
-        s3.put_object(
-            Bucket=bucket_name,
-            Key=f'{filename}.{format}',
-            Body=data
-        )
+        s3.put_object(Bucket=bucket_name, Key=f"{filename}.{format}", Body=data)
     except (ClientError, ParamValidationError) as e:
         logging.error(e)
         return {"result": "Failure"}
@@ -167,8 +163,9 @@ def get_new_rows(conn, table, timestamp):
         logging.error("Table not found")
         return ["Table not found"]
 
+
 def csv_reformat_and_upload(s3, rows, columns, table_name):
-    '''Takes rows, columns, and name of a table, converts it
+    """Takes rows, columns, and name of a table, converts it
     to csv file format, and uploads the file to s3 Ingestion bucket.
 
     Paramaters:
@@ -179,24 +176,29 @@ def csv_reformat_and_upload(s3, rows, columns, table_name):
 
     Returns:
         Dict (dict): {"result": "Failure/Success"} + "detail" if successful.
-    '''
+    """
     timestamp = str(datetime.now())
     try:
         df = pd.DataFrame(rows, columns=columns)
         with StringIO() as csv:
             df.to_csv(csv, index=False)
             data = csv.getvalue()
-            response = write_to_s3(s3, 'nc-terraformers-ingestion',
-                                   f"{table_name}/{table_name}_{timestamp}",
-                                   "csv", data)
+            response = write_to_s3(
+                s3,
+                "nc-terraformers-ingestion",
+                f"{table_name}/{table_name}_{timestamp}",
+                "csv",
+                data,
+            )
             if response["result"] == "Success":
                 return {
                     "result": "Success",
-                    "detail": "Converted to csv, uploaded to ingestion bucket"
+                    "detail": "Converted to csv, uploaded to ingestion bucket",
                 }
     except Exception:
         pass
     return {"result": "Failure"}
+
 
 # write latest timestamps to timestamp table
 
