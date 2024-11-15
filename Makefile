@@ -37,8 +37,8 @@ endef
 ## Build the environment requirements
 requirements: create-environment
 	$(call execute_in_env, $(PIP) install pip-tools)
-	$(call execute_in_env, pip-compile ../../requirements.in)
-	$(call execute_in_env, $(PIP) install -r ../../requirements.txt)
+	$(call execute_in_env, pip-compile requirements.in)
+	$(call execute_in_env, $(PIP) install -r requirements.txt)
 
 ################################################################################################################
 # Set Up
@@ -65,12 +65,12 @@ dev-setup: bandit pip-audit black pytest-cov
 
 ## Run the security test (bandit + pip-audit)
 security-test:
-	$(call execute_in_env, pip-audit -r ../../requirements.txt)
-	$(call execute_in_env, bandit -lll */*.py *c/*/*.py)
+	$(call execute_in_env, pip-audit -r requirements.txt)
+	$(call execute_in_env, bandit -lll python/lambda1/src/*.py python/lambda1/test/*.py)
 
 ## Run the black code check
 run-black:
-	$(call execute_in_env, black  ./src/*.py ./tests/*.py)
+	$(call execute_in_env, black  python/lambda1/src/*.py python/lambda1/test/*.py)
 
 ## Run the unit tests
 unit-test:
