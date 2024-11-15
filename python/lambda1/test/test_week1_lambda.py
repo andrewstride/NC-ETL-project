@@ -1,5 +1,5 @@
 from src.week1_lambda import lambda_handler
-from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamps_from_db, read_timestamps_table_from_s3, tables_and_timestamps_to_query, get_new_rows
+from src.utils import get_all_rows, get_columns, write_to_s3, get_tables, fetch_last_timestamps_from_db, read_timestamps_table_from_s3, tables_and_timestamps_to_query, get_new_rows, reformat_data
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
@@ -196,3 +196,10 @@ class TestGetNewRows:
         for item in output:
             assert isinstance(item, list)
 
+class TestReformatData:
+    def test_reformat_data_returns_a_string(self):
+        conn = db_connection()
+        test_rows = 
+        test_columns = 
+        test_name = 
+        output = reformat_data(conn, )

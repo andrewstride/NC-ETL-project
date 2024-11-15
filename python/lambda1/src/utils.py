@@ -154,7 +154,26 @@ def get_new_rows(conn, table, timestamp):
 
 
 # func: read s3 data and reupload with new data added
+
+def reformat_data(conn, rows, columns, table_name):
+    '''Takes rows, columns, and name of a table, converts it
+    to csv file format, and uploads the file to s3 Ingestion bucket.
+
+    Paramaters: 
+        s3: Boto3.client('s3') connection
+        Rows (list): the rows of the table
+        Columns (list of lists): the columns of the table
+        Table_name (str): the name of the table
+
+    Returns:
+        A message (str) saying whether the upload was successful.
+    
+    '''
+    pass
+
+
 # write latest timestamps to timestamp table
+
 
 # Change file structure to match main branch before merge
 
