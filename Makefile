@@ -37,7 +37,7 @@ endef
 ## Build the environment requirements
 requirements: create-environment
 	$(call execute_in_env, $(PIP) install pip-tools)
-	$(call execute_in_env, pip-compile requirements.in)
+	$(call execute_in_env, pip-compile ../../requirements.in)
 	$(call execute_in_env, $(PIP) install -r ../../requirements.txt)
 
 ################################################################################################################
@@ -54,12 +54,12 @@ pip-audit:
 black:
 	$(call execute_in_env, $(PIP) install black)
 
-## Install coverage
-coverage:
-	$(call execute_in_env, $(PIP) install coverage)
+## Install pytest-cov
+pytest-cov:
+	$(call execute_in_env, $(PIP) install pytest-cov)
 
 ## Set up dev requirements (bandit, pip-audit, black)
-dev-setup: bandit pip-audit black coverage
+dev-setup: bandit pip-audit black pytest-cov
 
 # Build / Run
 
