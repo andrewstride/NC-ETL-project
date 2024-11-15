@@ -67,6 +67,7 @@ class TestWriteToS3:
 
     @mock_aws
     def test_writes_file(self):
+        timestamp = ""
         s3 = boto3.client('s3')
         data = json.dumps({'test':'data'})
         client = boto3.client('s3')
@@ -195,7 +196,7 @@ class TestGetNewRows:
             assert isinstance(item, list)
 
 
-class TestReformatData:
+class TestCsvReformatAndUpload:
     def test_returns_a_dict_with_result_key(self):
         conn = db_connection()
         test_rows = get_all_rows(conn, "staff")
@@ -228,7 +229,7 @@ class TestReformatData:
             response = client.list_objects_v2(
                      Bucket=test_bucket).get("Contents")
             bucket_files = [file['Key'] for file in response]
-            if test_name in bucket_files:
+            if len(bucket_files) > 1:
                 get_file = client.get_object(Bucket=test_bucket,
                                              Key=test_name)
                 assert get_file['ContentType'] == "csv"
@@ -252,7 +253,9 @@ class TestReformatData:
             response = client.list_objects_v2(
                      Bucket=test_bucket).get("Contents")
             bucket_files = [file['Key'] for file in response]
-            assert f"{test_name}.csv" in bucket_files
+            for file in bucket_files:
+                assert "staff/staff" in file
+                assert ".csv" in file
 
     def test_handles_error(self):
         test_rows = ""

@@ -4,6 +4,7 @@ import logging
 import json
 import pandas as pd
 from io import StringIO
+from datetime import datetime
 
 
 def get_tables(conn):
@@ -169,13 +170,15 @@ def csv_reformat_and_upload(s3, rows, columns, table_name):
     Returns:
         Dict (dict): {"result": "Failure/Success"} + "detail" if successful.
     '''
+    timestamp = str(datetime.now())
     try:
         df = pd.DataFrame(rows, columns=columns)
         with StringIO() as csv:
             df.to_csv(csv, index=False)
             data = csv.getvalue()
             response = write_to_s3(s3, 'nc-terraformers-ingestion',
-                                   table_name, "csv", data)
+                                   f"{table_name}/{table_name}_{timestamp}",
+                                   "csv", data)
             if response["result"] == "Success":
                 return {
                     "result": "Success",
