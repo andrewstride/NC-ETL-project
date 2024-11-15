@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - name: Set pythonpath
-      run: echo "PYTHONPATH=$(pwd)/python/lambda:$(pwd)/python/lambda/src" >> "$GITHUB_ENV"
+      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
     - name: Checkout code
       uses: actions/checkout@v3
 
