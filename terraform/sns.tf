@@ -1,6 +1,6 @@
 ## sns topic for lambdas
 resource "aws_sns_topic" "alert_for_lambda" {
-    name = "alert_for_lambda1"
+    name = "alert_for_lambda"
 }
 
 ## sns topic subscription for lambdas - links to email account
