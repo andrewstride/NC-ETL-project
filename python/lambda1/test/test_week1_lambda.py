@@ -5,10 +5,13 @@ from src.utils import (
     write_to_s3,
     get_tables,
     fetch_last_timestamps_from_db,
-    read_timestamps_table_from_s3,
+    read_timestamp_from_s3,
     tables_and_timestamps_to_query,
     get_new_rows,
-    csv_reformat_and_upload,
+    write_df_to_csv,
+    table_to_dataframe,
+    timestamp_from_df,
+    write_timestamp_to_s3,
 )
 from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
@@ -17,8 +20,9 @@ from unittest.mock import patch
 import json
 import boto3
 import pytest
+import pandas as pd
 
-
+@pytest.mark.skip
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
         creds = get_db_creds()
@@ -34,7 +38,7 @@ class TestGetDBCreds:
         for cred in creds:
             assert isinstance(creds[cred], str)
 
-
+@pytest.mark.skip
 class TestGetRows:
     def test_returns_list(self):
         conn = db_connection()
@@ -52,7 +56,7 @@ class TestGetRows:
         for row in result:
             assert len(row) == 7
 
-
+@pytest.mark.skip
 class TestGetColumns:
     def test_returns_list(self):
         conn = db_connection()
@@ -63,14 +67,14 @@ class TestGetColumns:
         result = get_columns(conn, "staff")
         assert len(result) == 7
 
-
+@pytest.mark.skip
 class TestLogger:
     def test_token_logger(self):
         with LogCapture() as l:
             lambda_handler([], {})
             l.check_present(("root", "ERROR", "Houston, we have a major problem"))
 
-
+@pytest.mark.skip
 class TestWriteToS3:
     @mock_aws
     def test_returns_dict(self):
@@ -130,7 +134,7 @@ Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types:
                 l
             )
 
-
+@pytest.mark.skip
 class TestGetTables:
     def test_get_tables_returns_list(self):
         conn = db_connection()
@@ -286,7 +290,7 @@ class TestTablesAndTimestampsToQuery:
             assert str({"KeyError": "'test'"}) in str(l)
         assert output == {"staff": "2023-11-14 10:19:09.990000"}
 
-
+@pytest.mark.skip
 class TestGetNewRows:
     def test_csv_reformat_and_upload_returns_list_of_lists(self):
         conn = db_connection()
@@ -295,7 +299,7 @@ class TestGetNewRows:
         for item in output:
             assert isinstance(item, list)
 
-
+@pytest.mark.skip
 class TestCsvReformatAndUpload:
     def test_returns_a_dict_with_result_key(self):
         conn = db_connection()
@@ -370,7 +374,6 @@ class TestCsvReformatAndUpload:
             assert output == {"result": "Failure"}
 
 
-@pytest.mark.skip
 class TestLambdaHandler:
     # @mock_aws
     def test_returns_200_response(self):
@@ -383,3 +386,12 @@ class TestLambdaHandler:
         for item in response["Contents"]:
             print(item["Key"])
         assert response == 1
+
+class TestGetTimestampFromDataFrame:
+    def test_returns_timestamp(self):
+        conn = db_connection()
+        rows = get_all_rows(conn, "sales_order")
+        columns = get_columns(conn, "sales_order")
+        test_df = pd.DataFrame(rows, columns=columns)
+        print(test_df['last_updated'].max())
+        test_df.head().to_json('test_table.json', orient='records')

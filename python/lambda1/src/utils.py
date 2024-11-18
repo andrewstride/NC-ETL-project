@@ -100,7 +100,7 @@ def fetch_last_timestamps_from_db(conn):
     return output_dict
 
 
-def read_timestamps_table_from_s3(s3, bucket_name, filename):
+def read_timestamp_from_s3(s3, table):
     """Reads file from given s3 bucket
 
     Parameters:
@@ -112,7 +112,8 @@ def read_timestamps_table_from_s3(s3, bucket_name, filename):
         Dictionary of format {'Table Name':'Timestamp String'}
     """
     try:
-        response = s3.get_object(Bucket=bucket_name, Key=filename)
+        filename = f"{table}_timestamp.json"
+        response = s3.get_object(Bucket="nc-terraformers-ingestion", Key=filename)
         body = response["Body"]
         return json.loads(body.read().decode())
     except ClientError as e:
@@ -164,7 +165,7 @@ def get_new_rows(conn, table, timestamp):
         return ["Table not found"]
 
 
-def csv_reformat_and_upload(s3, rows, columns, table_name):
+def write_df_to_csv(s3, df, table_name):
     """Takes rows, columns, and name of a table, converts it
     to csv file format, and uploads the file to s3 Ingestion bucket.
 
@@ -179,7 +180,6 @@ def csv_reformat_and_upload(s3, rows, columns, table_name):
     """
     timestamp = str(datetime.now())
     try:
-        df = pd.DataFrame(rows, columns=columns)
         with StringIO() as csv:
             df.to_csv(csv, index=False)
             data = csv.getvalue()
@@ -200,8 +200,18 @@ def csv_reformat_and_upload(s3, rows, columns, table_name):
     return {"result": "Failure"}
 
 
-# write latest timestamps to timestamp table
+def table_to_dataframe(rows, columns):
+    return pd.DataFrame(rows, columns=columns)
 
-# Change file structure to match main branch before merge
+def timestamp_from_df(df):
+    return df['last_updated'].max()
 
-# pg8000.native import identifier
+def write_timestamp_to_s3(s3, df, table):
+    try:
+        timestamp_json = json.dumps({table: timestamp_from_df(df)})
+        filename = f"{table}_timestamp"
+        write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
+        return {'result': 'Success'}
+    except Exception as e:
+        logging.error(e)
+        return {'result': 'Failure'}
