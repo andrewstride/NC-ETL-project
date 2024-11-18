@@ -20,16 +20,21 @@ import json
 import boto3
 import pytest
 import pandas as pd
-import os
 from datetime import datetime
 
 
-@pytest.fixture()
+@pytest.fixture(scope='function')
 def test_df():
     test_rows = [[True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
                      [True, datetime(2023, 11, 3, 14, 20, 51, 563000)]]
     test_columns = ["column1", "last_updated"]
     return pd.DataFrame(test_rows, columns=test_columns)
+
+@pytest.fixture(scope='function')
+def test_staff_df():
+    rows = [[1, 'Jeremie', 'Franey', 2, 'jeremie.franey@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)], [2, 'Deron', 'Beier', 6, 'deron.beier@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)], [3, 'Jeanette', 'Erdman', 6, 'jeanette.erdman@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)]]
+    cols = ['staff_id', 'first_name', 'last_name', 'department_id', 'email_address', 'created_at', 'last_updated']
+    return pd.DataFrame(rows, columns=cols)
 
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
@@ -88,6 +93,7 @@ class TestGetRows:
         for row in result:
             assert len(row) == 7
 
+
 class TestGetColumns:
     def test_returns_list(self):
         conn = db_connection()
@@ -101,11 +107,14 @@ class TestGetColumns:
 class TestLogger:
     @mock_aws
     @patch('src.week1_lambda.db_connection')
-    def test_token_logger(self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
+    @patch('src.week1_lambda.datetime')
+    def test_lambda_executed_timestamp_logger(self, mock_datetime, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
         mock_db_connection.return_value = conn_fixture
+        mock_datetime.now.return_value = "timestamp"
+        # Timestamp mocked, AWS Mocked, s3_ingestion_bucket supplied, DB_connection patched in to bypass AWS secrets access
         with LogCapture() as l:
             lambda_handler([], {})
-            l.check_present(("root", "ERROR", "Houston, we have a major problem"))
+            assert ("root INFO\n  Lambda executed at timestamp") in str(l)
 
 class TestWriteToS3:
     def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
@@ -151,8 +160,7 @@ Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types:
 class TestReadTimestampFromS3:
     def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
         s3 = empty_nc_terraformers_ingestion_s3
-        table = "staff"
-        output = read_timestamp_from_s3(s3, table)
+        output = read_timestamp_from_s3(s3, "staff")
         assert isinstance(output, dict)
 
     def test_returns_timestamp_dict(self, empty_nc_terraformers_ingestion_s3):
@@ -161,8 +169,7 @@ class TestReadTimestampFromS3:
         s3.put_object(Bucket="nc-terraformers-ingestion",
                       Body=data,
                       Key="staff_timestamp.json")
-        table = "staff"
-        output = read_timestamp_from_s3(s3, table)
+        output = read_timestamp_from_s3(s3, "staff")
         assert output == json.loads(data)
 
     def test_handles_no_timestamp(self, empty_nc_terraformers_ingestion_s3):
@@ -237,29 +244,21 @@ class TestWriteDfToCsv:
         assert isinstance(output, dict)
         assert isinstance(output["result"], str)
     
-    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self, conn_fixture, empty_nc_terraformers_ingestion_s3):
-        conn = conn_fixture
-        test_rows = get_all_rows(conn, "staff")
-        test_columns = get_columns(conn, "staff")
-        test_df = pd.DataFrame(test_rows, columns=test_columns)
+    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self, empty_nc_terraformers_ingestion_s3, test_staff_df):
         test_name = "staff"
         client = empty_nc_terraformers_ingestion_s3
         test_bucket = "nc-terraformers-ingestion"
-        write_df_to_csv(client, test_df, test_name)
+        write_df_to_csv(client, test_staff_df, test_name)
         response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
         bucket_files = [file["Key"] for file in response]
         if len(bucket_files) > 1:
             get_file = client.get_object(Bucket=test_bucket, Key=test_name)
             assert get_file["ContentType"] == "csv"
     
-    def test_uploads_to_s3_bucket(self, conn_fixture, empty_nc_terraformers_ingestion_s3):
-        conn = conn_fixture
-        test_rows = get_all_rows(conn, "staff")
-        test_columns = get_columns(conn, "staff")
-        test_df = pd.DataFrame(test_rows, columns=test_columns)
+    def test_uploads_to_s3_bucket(self, test_staff_df, empty_nc_terraformers_ingestion_s3):
         test_name = "staff"
         client = empty_nc_terraformers_ingestion_s3
-        output = write_df_to_csv(client, test_df, test_name)
+        output = write_df_to_csv(client, test_staff_df, test_name)
         assert output == {
             "result": "Success",
             "detail": "Converted to csv, uploaded to ingestion bucket",
@@ -271,14 +270,13 @@ class TestWriteDfToCsv:
             assert ".csv" in file
    
     def test_handles_error(self, empty_nc_terraformers_ingestion_s3):
-        with mock_aws():
-            test_df = ""
-            test_name = ""
-            s3 = empty_nc_terraformers_ingestion_s3
-            with LogCapture() as l:
-                output = write_df_to_csv(s3, test_df, test_name)
-                assert output == {"result": "Failure"}
-                assert "'str' object has no attribute 'to_csv'" in str(l)
+        test_df = ""
+        test_name = ""
+        s3 = empty_nc_terraformers_ingestion_s3
+        with LogCapture() as l:
+            output = write_df_to_csv(s3, test_df, test_name)
+            assert output == {"result": "Failure"}
+            assert "'str' object has no attribute 'to_csv'" in str(l)
 
 
 class TestTableToDataframe:
@@ -300,7 +298,6 @@ class TestTableToDataframe:
 
 class TestTimestampFromDf:
     def test_calculates_max_last_updated_timestamp_in_dataframe(self, test_df):
-        test_df = test_df
         expected_as_datetime = datetime(2023, 11, 3, 14, 20, 51, 563000)
         output = timestamp_from_df(test_df)
         assert output.to_pydatetime() == expected_as_datetime
@@ -333,19 +330,20 @@ class TestWriteTimeStampToS3:
         assert output == {'result': 'Failure'}
 
         
-@pytest.mark.skip
 class TestLambdaHandler:
-    # @mock_aws
-    def test_returns_200_response(self):
-        client = boto3.client("s3")
-        # client.create_bucket(Bucket='nc-terraformers-ingestion', CreateBucketConfiguration={
-        # 'LocationConstraint': 'eu-west-2'})
+    @mock_aws
+    @patch('src.week1_lambda.db_connection')
+    def test_returns_200_response(self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
+        mock_db_connection.return_value = conn_fixture
+        s3 = empty_nc_terraformers_ingestion_s3
         output = lambda_handler({}, {})
         assert output == {"response": 200}
-        response = client.list_objects(Bucket="nc-terraformers-ingestion")
-        for item in response["Contents"]:
-            print(item["Key"])
-        assert response == 1
+        response = s3.list_objects(Bucket="nc-terraformers-ingestion")
+        content_list = [item['Key'] for item in response["Contents"]]
+        db_tables = get_tables(conn_fixture)
+        for table in db_tables:
+            assert f"{table}_timestamp.json" in content_list
+        assert len(content_list) == len(db_tables)*2
 
 
 # class TestGetTimestampFromDataFrame:

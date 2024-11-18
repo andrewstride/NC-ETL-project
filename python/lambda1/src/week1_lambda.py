@@ -38,7 +38,7 @@ def lambda_handler(event, context):
             else:
                 logging.info(f"No new data in table {table} to upload.")
    
-        logger.error("Houston, we have a %s", "major problem", exc_info=True)
+        logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
         return {"response": 200}
 
     except Exception as e:
