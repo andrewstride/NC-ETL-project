@@ -97,7 +97,7 @@ def read_timestamp_from_s3(s3, table):
         return json.loads(body.read().decode())
     except ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
-            return {"detail" : "No timestamp exists"}
+            return {"detail": "No timestamp exists"}
         logging.error(e)
         return {"result": "Failure"}
 
@@ -170,18 +170,20 @@ def table_to_dataframe(rows, columns):
     except Exception as e:
         logging.error(e)
 
+
 def timestamp_from_df(df):
     try:
-        return df['last_updated'].max()
+        return df["last_updated"].max()
     except KeyError as e:
         logging.error({"column not found": e})
+
 
 def write_timestamp_to_s3(s3, df, table):
     try:
         timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
-        return {'result': 'Success'}
+        return {"result": "Success"}
     except Exception as e:
         logging.error(e)
-        return {'result': 'Failure'}
+        return {"result": "Failure"}

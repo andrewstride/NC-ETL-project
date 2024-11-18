@@ -25,7 +25,7 @@ def lambda_handler(event, context):
         s3 = boto3.client("s3")
         for table in get_tables(conn):
             timestamp_from_df = read_timestamp_from_s3(s3, table)
-            if timestamp_from_df == {"detail" : "No timestamp exists"}:
+            if timestamp_from_df == {"detail": "No timestamp exists"}:
                 rows = get_all_rows(conn, table)
             else:
                 rows = get_new_rows(conn, table, timestamp_from_df)
@@ -37,7 +37,7 @@ def lambda_handler(event, context):
                 write_timestamp_to_s3(s3, df, table)
             else:
                 logging.info(f"No new data in table {table} to upload.")
-   
+
         logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
         return {"response": 200}
 

@@ -23,18 +23,58 @@ import pandas as pd
 from datetime import datetime
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def test_df():
-    test_rows = [[True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
-                     [True, datetime(2023, 11, 3, 14, 20, 51, 563000)]]
+    test_rows = [
+        [True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
+        [True, datetime(2023, 11, 3, 14, 20, 51, 563000)],
+    ]
     test_columns = ["column1", "last_updated"]
     return pd.DataFrame(test_rows, columns=test_columns)
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def test_staff_df():
-    rows = [[1, 'Jeremie', 'Franey', 2, 'jeremie.franey@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)], [2, 'Deron', 'Beier', 6, 'deron.beier@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)], [3, 'Jeanette', 'Erdman', 6, 'jeanette.erdman@terrifictotes.com', datetime(2022, 11, 3, 14, 20, 51, 563000), datetime(2022, 11, 3, 14, 20, 51, 563000)]]
-    cols = ['staff_id', 'first_name', 'last_name', 'department_id', 'email_address', 'created_at', 'last_updated']
+    rows = [
+        [
+            1,
+            "Jeremie",
+            "Franey",
+            2,
+            "jeremie.franey@terrifictotes.com",
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+        ],
+        [
+            2,
+            "Deron",
+            "Beier",
+            6,
+            "deron.beier@terrifictotes.com",
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+        ],
+        [
+            3,
+            "Jeanette",
+            "Erdman",
+            6,
+            "jeanette.erdman@terrifictotes.com",
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            datetime(2022, 11, 3, 14, 20, 51, 563000),
+        ],
+    ]
+    cols = [
+        "staff_id",
+        "first_name",
+        "last_name",
+        "department_id",
+        "email_address",
+        "created_at",
+        "last_updated",
+    ]
     return pd.DataFrame(rows, columns=cols)
+
 
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
@@ -104,17 +144,25 @@ class TestGetColumns:
         result = get_columns(conn, "staff")
         assert len(result) == 7
 
+
 class TestLogger:
     @mock_aws
-    @patch('src.week1_lambda.db_connection')
-    @patch('src.week1_lambda.datetime')
-    def test_lambda_executed_timestamp_logger(self, mock_datetime, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
+    @patch("src.week1_lambda.db_connection")
+    @patch("src.week1_lambda.datetime")
+    def test_lambda_executed_timestamp_logger(
+        self,
+        mock_datetime,
+        mock_db_connection,
+        conn_fixture,
+        empty_nc_terraformers_ingestion_s3,
+    ):
         mock_db_connection.return_value = conn_fixture
         mock_datetime.now.return_value = "timestamp"
         # Timestamp mocked, AWS Mocked, s3_ingestion_bucket supplied, DB_connection patched in to bypass AWS secrets access
         with LogCapture() as l:
             lambda_handler([], {})
             assert ("root INFO\n  Lambda executed at timestamp") in str(l)
+
 
 class TestWriteToS3:
     def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
@@ -157,6 +205,7 @@ Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types:
                 l
             )
 
+
 class TestReadTimestampFromS3:
     def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
         s3 = empty_nc_terraformers_ingestion_s3
@@ -166,9 +215,9 @@ class TestReadTimestampFromS3:
     def test_returns_timestamp_dict(self, empty_nc_terraformers_ingestion_s3):
         s3 = empty_nc_terraformers_ingestion_s3
         data = json.dumps({"staff": "test_timestamp"})
-        s3.put_object(Bucket="nc-terraformers-ingestion",
-                      Body=data,
-                      Key="staff_timestamp.json")
+        s3.put_object(
+            Bucket="nc-terraformers-ingestion", Body=data, Key="staff_timestamp.json"
+        )
         output = read_timestamp_from_s3(s3, "staff")
         assert output == json.loads(data)
 
@@ -176,7 +225,7 @@ class TestReadTimestampFromS3:
         s3 = empty_nc_terraformers_ingestion_s3
         table = "staff"
         output = read_timestamp_from_s3(s3, table)
-        assert output == {"detail" : "No timestamp exists"}
+        assert output == {"detail": "No timestamp exists"}
 
     @mock_aws
     def test_handles_no_such_bucket_error(self):
@@ -190,6 +239,7 @@ class TestReadTimestampFromS3:
                 l
             )
 
+
 class TestGetNewRows:
     def test_returns_list_of_lists(self):
         conn = db_connection()
@@ -202,7 +252,10 @@ class TestGetNewRows:
         conn = db_connection()
         with LogCapture() as l:
             output = get_new_rows(conn, "staff", "incorrect timestamp")
-            assert '''{'S': 'ERROR', 'V': 'ERROR', 'C': '22007', 'M': 'invalid value "inco" for "YYYY"', 'D': 'Value must be an integer.', 'F': 'formatting.c', 'L': '2416', 'R': 'from_char_parse_int_len'}''' in str(l)
+            assert (
+                """{'S': 'ERROR', 'V': 'ERROR', 'C': '22007', 'M': 'invalid value "inco" for "YYYY"', 'D': 'Value must be an integer.', 'F': 'formatting.c', 'L': '2416', 'R': 'from_char_parse_int_len'}"""
+                in str(l)
+            )
         assert output == []
 
     def test_returns_data_after_timestamp(self):
@@ -213,10 +266,8 @@ class TestGetNewRows:
         df = pd.DataFrame(output, columns=columns)
         format_string = "%Y-%m-%d %H:%M:%S.%f"
         min_time = df["last_updated"].min().to_pydatetime()
-        assert min_time >= datetime.strptime(timestamp,
-                                             format_string)
-        assert type(min_time) == type(datetime.strptime(timestamp,
-                                             format_string))
+        assert min_time >= datetime.strptime(timestamp, format_string)
+        assert type(min_time) == type(datetime.strptime(timestamp, format_string))
 
     def test_handles_invalid_table_name(self):
         conn = db_connection()
@@ -236,15 +287,20 @@ class TestGetNewRows:
             assert output == []
             assert "root ERROR" in str(l)
 
+
 class TestWriteDfToCsv:
-    def test_returns_a_dict_with_result_key(self, empty_nc_terraformers_ingestion_s3, test_df):
+    def test_returns_a_dict_with_result_key(
+        self, empty_nc_terraformers_ingestion_s3, test_df
+    ):
         test_name = "staff"
         client = empty_nc_terraformers_ingestion_s3
         output = write_df_to_csv(client, test_df, test_name)
         assert isinstance(output, dict)
         assert isinstance(output["result"], str)
-    
-    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self, empty_nc_terraformers_ingestion_s3, test_staff_df):
+
+    def test_converts_data_to_csv_and_uploads_to_s3_bucket(
+        self, empty_nc_terraformers_ingestion_s3, test_staff_df
+    ):
         test_name = "staff"
         client = empty_nc_terraformers_ingestion_s3
         test_bucket = "nc-terraformers-ingestion"
@@ -254,8 +310,10 @@ class TestWriteDfToCsv:
         if len(bucket_files) > 1:
             get_file = client.get_object(Bucket=test_bucket, Key=test_name)
             assert get_file["ContentType"] == "csv"
-    
-    def test_uploads_to_s3_bucket(self, test_staff_df, empty_nc_terraformers_ingestion_s3):
+
+    def test_uploads_to_s3_bucket(
+        self, test_staff_df, empty_nc_terraformers_ingestion_s3
+    ):
         test_name = "staff"
         client = empty_nc_terraformers_ingestion_s3
         output = write_df_to_csv(client, test_staff_df, test_name)
@@ -263,12 +321,14 @@ class TestWriteDfToCsv:
             "result": "Success",
             "detail": "Converted to csv, uploaded to ingestion bucket",
         }
-        response = client.list_objects_v2(Bucket="nc-terraformers-ingestion").get("Contents")
+        response = client.list_objects_v2(Bucket="nc-terraformers-ingestion").get(
+            "Contents"
+        )
         bucket_files = [file["Key"] for file in response]
         for file in bucket_files:
             assert "staff/staff" in file
             assert ".csv" in file
-   
+
     def test_handles_error(self, empty_nc_terraformers_ingestion_s3):
         test_df = ""
         test_name = ""
@@ -303,47 +363,51 @@ class TestTimestampFromDf:
         assert output.to_pydatetime() == expected_as_datetime
 
     def test_handles_column_not_present(self):
-        rows = [[1, 2, 3, 4, 5],[2, 1, 'hi', 6, False]]
-        columns = ['a', 'b', 'c', 'd', 'e']
+        rows = [[1, 2, 3, 4, 5], [2, 1, "hi", 6, False]]
+        columns = ["a", "b", "c", "d", "e"]
         df = pd.DataFrame(rows, columns=columns)
         with LogCapture() as l:
             output = timestamp_from_df(df)
             assert output == None
-            assert "root ERROR\n  {'column not found': KeyError('last_updated')}" in str(l)
+            assert (
+                "root ERROR\n  {'column not found': KeyError('last_updated')}" in str(l)
+            )
 
 
 class TestWriteTimeStampToS3:
     def test_uploads_timestamp_to_s3(self, empty_nc_terraformers_ingestion_s3, test_df):
         s3 = empty_nc_terraformers_ingestion_s3
         output = write_timestamp_to_s3(s3, test_df, "test")
-        response = s3.list_objects(Bucket='nc-terraformers-ingestion').get("Contents")
+        response = s3.list_objects(Bucket="nc-terraformers-ingestion").get("Contents")
         bucket_files = [file["Key"] for file in response]
         assert "test_timestamp.json" in bucket_files
-        assert output == {'result': 'Success'}
-    
+        assert output == {"result": "Success"}
+
     def test_handles_df_error(self, empty_nc_terraformers_ingestion_s3):
         s3 = empty_nc_terraformers_ingestion_s3
         invalid_df = "invalid_df"
         with LogCapture() as l:
             output = write_timestamp_to_s3(s3, invalid_df, "test")
             assert "root ERROR\n  string indices must be integers, not 'str'" in str(l)
-        assert output == {'result': 'Failure'}
+        assert output == {"result": "Failure"}
 
-        
+
 class TestLambdaHandler:
     @mock_aws
-    @patch('src.week1_lambda.db_connection')
-    def test_returns_200_response(self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
+    @patch("src.week1_lambda.db_connection")
+    def test_returns_200_response(
+        self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3
+    ):
         mock_db_connection.return_value = conn_fixture
         s3 = empty_nc_terraformers_ingestion_s3
         output = lambda_handler({}, {})
         assert output == {"response": 200}
         response = s3.list_objects(Bucket="nc-terraformers-ingestion")
-        content_list = [item['Key'] for item in response["Contents"]]
+        content_list = [item["Key"] for item in response["Contents"]]
         db_tables = get_tables(conn_fixture)
         for table in db_tables:
             assert f"{table}_timestamp.json" in content_list
-        assert len(content_list) == len(db_tables)*2
+        assert len(content_list) == len(db_tables) * 2
 
 
 # class TestGetTimestampFromDataFrame:
@@ -357,7 +421,7 @@ class TestLambdaHandler:
 
 # @pytest.mark.skip
 # class TestReadTimestampFromS3:
-    
+
 #     @mock_aws
 #     def test_(self):
 #         table = "staff"
