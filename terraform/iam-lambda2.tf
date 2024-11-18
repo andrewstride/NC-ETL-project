@@ -4,19 +4,19 @@ resource "aws_iam_role" "role_for_lambda2" {
     assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
-## Policy document to PUT an object in the INGESTION S3 bucket (a way of portraying the JSON)
-data "aws_iam_policy_document" "s3_put_object_document" {
+## Policy document to PUT an object in the PROCESSING S3 bucket (a way of portraying the JSON)
+data "aws_iam_policy_document" "s3_put_object_document_lambda2" {
     statement {
         effect = "Allow"
         actions = ["S3:PutObject"]
-        resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
+        resources = ["${aws_s3_bucket.processing_bucket.arn}/*"]
     }
 }
 
 ## Policy for lambda2, for lambda2 to have the S3 PUT object permission
 resource "aws_iam_policy" "s3_put_policy_for_lambda2" {
     name = "s3_put_policy_for_${var.lambda2_name}"
-    policy = data.aws_iam_policy_document.s3_put_object_document.json
+    policy = data.aws_iam_policy_document.s3_put_object_document_lambda2.json
 }
 
 ## Attach the S3 PUT object policy to the lambda2 iam role
@@ -77,7 +77,6 @@ resource "aws_iam_policy" "get_secret_value_policy_for_lambda2" {
     name = "get_secret_value_policy_for_${var.lambda2_name}"
     policy = data.aws_iam_policy_document.get_secret_value_policy.json
 }
-
 
 ## Attach the get secret value policy to the lambda2 iam role
 resource "aws_iam_role_policy_attachment" "get_secret_value_attachment_for_lambda2" {

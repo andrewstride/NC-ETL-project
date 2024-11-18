@@ -5,7 +5,7 @@ resource "aws_iam_role" "role_for_lambda1" {
 }
 
 ## Policy document to PUT an object in the INGESTION S3 bucket (a way of portraying the JSON)
-data "aws_iam_policy_document" "s3_put_object_document" {
+data "aws_iam_policy_document" "s3_put_object_document_lambda1" {
     statement {
         effect = "Allow"
         actions = ["S3:PutObject"]
@@ -16,7 +16,7 @@ data "aws_iam_policy_document" "s3_put_object_document" {
 ## Policy for lambda1, for lambda1 to have the S3 PUT object permission
 resource "aws_iam_policy" "s3_put_policy_for_lambda1" {
     name = "s3_put_policy_for_${var.lambda1_name}"
-    policy = data.aws_iam_policy_document.s3_put_object_document.json
+    policy = data.aws_iam_policy_document.s3_put_object_document_lambda1.json
 }
 
 ## Attach the S3 PUT object policy to the lambda1 iam role
