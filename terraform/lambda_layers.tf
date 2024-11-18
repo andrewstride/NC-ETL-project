@@ -4,7 +4,8 @@ resource "null_resource" "create_dependencies" {
         command = "pip install -r ${path.module}/../requirements-${var.lambda1_name}.txt -t ${path.module}/${var.lambda1_layer_deployment_dir}/python"
     }
     triggers = {
-        dependencies = filemd5("${path.module}/../requirements-${var.lambda1_name}.txt")
+        source_code_hash = "${filebase64sha256("${path.module}/../requirements-${var.lambda1_name}.txt")}"
+        # dependencies = filemd5("${path.module}/../requirements-${var.lambda1_name}.txt")
     }
 }
 
