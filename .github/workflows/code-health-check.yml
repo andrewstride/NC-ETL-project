@@ -69,7 +69,7 @@ jobs:
   #       aws-region: ${{ secrets.AWS_REGION }}
 
     - name: install lambda1_layer requirements
-      run: pip install -r requirements-lambda1.txt -t terraform-remote-deployment/python
+      run: pip install -r requirements-lambda1.txt -t terraform-remote-deployment/lambda1-layer/python
     - name: zip lambda1_layer
       working-directory: terraform-remote-deployment
       run: | 
