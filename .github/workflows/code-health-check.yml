@@ -12,7 +12,6 @@ on:
       - main
       - CICD-test-py
 
-
 jobs:
   lint_and_security:
     runs-on: ubuntu-latest
@@ -53,10 +52,7 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: eu-west-2
-        
-    - name: Set pythonpath
-      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
-      
+             
     - name: Test with pytest
       run: |
           echo $PYTHONPATH
