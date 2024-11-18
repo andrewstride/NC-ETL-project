@@ -17,7 +17,7 @@ resource "aws_lambda_function" "lambda1" {
 data "archive_file" "lambda1_handler_func" {
     type = "zip"
     source_dir = var.lambda1_source_dir
-    excludes = ["test"]
+    excludes = var.lambda_comp_exclude_list
     output_path = "${path.module}/../terraform-remote-deployment/${var.lambda1_name}.zip"
 
 }
