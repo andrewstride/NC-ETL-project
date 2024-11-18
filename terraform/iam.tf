@@ -24,7 +24,7 @@ data "aws_iam_policy_document" "s3_put_object_document" {
     statement {
         effect = "Allow"
 
-        actions = ["S3:PutObject"]
+        actions = ["S3:PutObject", "S3:GetObject"]
 
         resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
     }
