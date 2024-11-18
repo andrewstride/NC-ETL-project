@@ -98,10 +98,11 @@ class TestGetColumns:
         result = get_columns(conn, "staff")
         assert len(result) == 7
 
-@pytest.mark.skip("Test needs to be refactored.")
 class TestLogger:
     @mock_aws
-    def test_token_logger(self):
+    @patch('src.week1_lambda.db_connection')
+    def test_token_logger(self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3):
+        mock_db_connection.return_value = conn_fixture
         with LogCapture() as l:
             lambda_handler([], {})
             l.check_present(("root", "ERROR", "Houston, we have a major problem"))
@@ -203,7 +204,6 @@ class TestGetNewRows:
         output = get_new_rows(conn, "sales_order", timestamp)
         columns = get_columns(conn, "sales_order")
         df = pd.DataFrame(output, columns=columns)
-        print(str(df["last_updated"].min()))
         format_string = "%Y-%m-%d %H:%M:%S.%f"
         min_time = df["last_updated"].min().to_pydatetime()
         assert min_time >= datetime.strptime(timestamp,
@@ -243,39 +243,32 @@ class TestWriteDfToCsv:
         test_columns = get_columns(conn, "staff")
         test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
-        with mock_aws():
-            client = empty_nc_terraformers_ingestion_s3
-            test_bucket = "nc-terraformers-ingestion"
-            write_df_to_csv(client, test_df, test_name)
-            response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
-            bucket_files = [file["Key"] for file in response]
-            if len(bucket_files) > 1:
-                get_file = client.get_object(Bucket=test_bucket, Key=test_name)
-                assert get_file["ContentType"] == "csv"
+        client = empty_nc_terraformers_ingestion_s3
+        test_bucket = "nc-terraformers-ingestion"
+        write_df_to_csv(client, test_df, test_name)
+        response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
+        bucket_files = [file["Key"] for file in response]
+        if len(bucket_files) > 1:
+            get_file = client.get_object(Bucket=test_bucket, Key=test_name)
+            assert get_file["ContentType"] == "csv"
     
-    def test_uploads_to_s3_bucket(self):
-        conn = db_connection()
+    def test_uploads_to_s3_bucket(self, conn_fixture, empty_nc_terraformers_ingestion_s3):
+        conn = conn_fixture
         test_rows = get_all_rows(conn, "staff")
         test_columns = get_columns(conn, "staff")
         test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
-        with mock_aws():
-            client = boto3.client("s3")
-            test_bucket = "nc-terraformers-ingestion"
-            client.create_bucket(
-                Bucket=test_bucket,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
-            output = write_df_to_csv(client, test_df, test_name)
-            assert output == {
-                "result": "Success",
-                "detail": "Converted to csv, uploaded to ingestion bucket",
-            }
-            response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
-            bucket_files = [file["Key"] for file in response]
-            for file in bucket_files:
-                assert "staff/staff" in file
-                assert ".csv" in file
+        client = empty_nc_terraformers_ingestion_s3
+        output = write_df_to_csv(client, test_df, test_name)
+        assert output == {
+            "result": "Success",
+            "detail": "Converted to csv, uploaded to ingestion bucket",
+        }
+        response = client.list_objects_v2(Bucket="nc-terraformers-ingestion").get("Contents")
+        bucket_files = [file["Key"] for file in response]
+        for file in bucket_files:
+            assert "staff/staff" in file
+            assert ".csv" in file
    
     def test_handles_error(self, empty_nc_terraformers_ingestion_s3):
         with mock_aws():
@@ -296,24 +289,30 @@ class TestTableToDataframe:
         output = table_to_dataframe(test_rows, test_columns)
         assert isinstance(output, pd.DataFrame)
 
-    # def test_handles_error(self):
-    #     test_rows = ""
-    #     test_columns = ""
-    #     with LogCapture() as l:
-    #         output = table_to_dataframe(test_rows, test_columns)
-    #         assert output == {"result": "Failure"}
-    #         assert "DataFrame constructor not properly called!" in str(l)
+    def test_handles_error(self):
+        test_rows = ""
+        test_columns = ""
+        with LogCapture() as l:
+            output = table_to_dataframe(test_rows, test_columns)
+            assert output == None
+            assert "DataFrame constructor not properly called!" in str(l)
 
 
 class TestTimestampFromDf:
-    def test_calculates_max_last_updated_timestamp_in_dataframe(self):
-        test_rows = [[True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
-                     [True, datetime(2023, 11, 3, 14, 20, 51, 563000)]]
-        test_columns = ["column1", "last_updated"]
-        test_df = pd.DataFrame(test_rows, columns=test_columns)
+    def test_calculates_max_last_updated_timestamp_in_dataframe(self, test_df):
+        test_df = test_df
         expected_as_datetime = datetime(2023, 11, 3, 14, 20, 51, 563000)
         output = timestamp_from_df(test_df)
         assert output.to_pydatetime() == expected_as_datetime
+
+    def test_handles_column_not_present(self):
+        rows = [[1, 2, 3, 4, 5],[2, 1, 'hi', 6, False]]
+        columns = ['a', 'b', 'c', 'd', 'e']
+        df = pd.DataFrame(rows, columns=columns)
+        with LogCapture() as l:
+            output = timestamp_from_df(df)
+            assert output == None
+            assert "root ERROR\n  {'column not found': KeyError('last_updated')}" in str(l)
 
 
 class TestWriteTimeStampToS3:

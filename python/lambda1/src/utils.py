@@ -165,14 +165,16 @@ def write_df_to_csv(s3, df, table_name):
 
 
 def table_to_dataframe(rows, columns):
-    # try:
-    return pd.DataFrame(rows, columns=columns)
-    # except Exception as e:
-    #     logging.error(e)
-    #     return {"result": "Failure"}
+    try:
+        return pd.DataFrame(rows, columns=columns)
+    except Exception as e:
+        logging.error(e)
 
 def timestamp_from_df(df):
-    return df['last_updated'].max()
+    try:
+        return df['last_updated'].max()
+    except KeyError as e:
+        logging.error({"column not found": e})
 
 def write_timestamp_to_s3(s3, df, table):
     try:
