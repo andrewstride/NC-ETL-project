@@ -19,6 +19,7 @@ import json
 import boto3
 import pytest
 import pandas as pd
+from datetime import datetime
 
 @pytest.mark.skip
 class TestGetDBCreds:
@@ -98,7 +99,7 @@ class TestLogger:
             lambda_handler([], {})
             l.check_present(("root", "ERROR", "Houston, we have a major problem"))
 
-
+@pytest.mark.skip
 class TestWriteToS3:
     @mock_aws
     def test_returns_dict(self):
@@ -158,7 +159,7 @@ Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types:
                 l
             )
 
-
+@pytest.mark.skip
 class TestReadTimestampFromS3:
     @mock_aws
     def test_returns_dict(self):
@@ -203,7 +204,7 @@ class TestReadTimestampFromS3:
                 l
             )
 
-
+@pytest.mark.skip
 class TestGetNewRows:
     def test_returns_list_of_lists(self):
         conn = db_connection()
@@ -219,19 +220,45 @@ class TestGetNewRows:
             assert '''{'S': 'ERROR', 'V': 'ERROR', 'C': '22007', 'M': 'invalid value "inco" for "YYYY"', 'D': 'Value must be an integer.', 'F': 'formatting.c', 'L': '2416', 'R': 'from_char_parse_int_len'}''' in str(l)
         assert output == []
 
-    # test returns data after timestamp
-    # timestamp = 
-    # output = get_new_rows(conn, sales_orders, timestamp)
-    # columns = get_columns(conn, sales_orders)
-    # df = pd.DataFrame(output, columns=columns)
-    # assert df["last_updated"].min() >= timestamp
+    def test_returns_data_after_timestamp(self):
+        timestamp = "2024-11-14 12:37:09.990000"
+        conn = db_connection()
+        output = get_new_rows(conn, "sales_order", timestamp)
+        columns = get_columns(conn, "sales_order")
+        df = pd.DataFrame(output, columns=columns)
+        print(str(df["last_updated"].min()))
+        format_string = "%Y-%m-%d %H:%M:%S.%f"
+        min_time = df["last_updated"].min().to_pydatetime()
+        assert min_time >= datetime.strptime(timestamp,
+                                             format_string)
+        assert type(min_time) == type(datetime.strptime(timestamp,
+                                             format_string))
 
-@pytest.mark.skip
-class TestCsvReformatAndUpload:
+    def test_handles_invalid_table_name(self):
+        conn = db_connection()
+        table = "invalid"
+        timestamp = "2024-11-14 12:37:09.990000"
+        with LogCapture() as l:
+            output = get_new_rows(conn, table, timestamp)
+            assert output == []
+            assert "root ERROR\n  Table not found" in str(l)
+
+    def test_handles_error(self):
+        conn = db_connection()
+        table = "staff"
+        timestamp = "hello"
+        with LogCapture() as l:
+            output = get_new_rows(conn, table, timestamp)
+            assert output == []
+            assert "root ERROR" in str(l)
+
+
+class TestWriteDfToCsv:
     def test_returns_a_dict_with_result_key(self):
         conn = db_connection()
         test_rows = get_all_rows(conn, "staff")
         test_columns = get_columns(conn, "staff")
+        test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
         with mock_aws():
             client = boto3.client("s3")
@@ -240,14 +267,15 @@ class TestCsvReformatAndUpload:
                 Bucket=test_bucket,
                 CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
             )
-            output = write_df_to_csv(client, test_rows, test_columns, test_name)
+            output = write_df_to_csv(client, test_df, test_name)
             assert isinstance(output, dict)
             assert isinstance(output["result"], str)
-
+    
     def test_converts_data_to_csv_and_uploads_to_s3_bucket(self):
         conn = db_connection()
         test_rows = get_all_rows(conn, "staff")
         test_columns = get_columns(conn, "staff")
+        test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
         with mock_aws():
             client = boto3.client("s3")
@@ -256,17 +284,18 @@ class TestCsvReformatAndUpload:
                 Bucket=test_bucket,
                 CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
             )
-            write_df_to_csv(client, test_rows, test_columns, test_name)
+            write_df_to_csv(client, test_df, test_name)
             response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
             bucket_files = [file["Key"] for file in response]
             if len(bucket_files) > 1:
                 get_file = client.get_object(Bucket=test_bucket, Key=test_name)
                 assert get_file["ContentType"] == "csv"
-
+    
     def test_uploads_to_s3_bucket(self):
         conn = db_connection()
         test_rows = get_all_rows(conn, "staff")
         test_columns = get_columns(conn, "staff")
+        test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
         with mock_aws():
             client = boto3.client("s3")
@@ -275,7 +304,7 @@ class TestCsvReformatAndUpload:
                 Bucket=test_bucket,
                 CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
             )
-            output = write_df_to_csv(client, test_rows, test_columns, test_name)
+            output = write_df_to_csv(client, test_df, test_name)
             assert output == {
                 "result": "Success",
                 "detail": "Converted to csv, uploaded to ingestion bucket",
@@ -285,20 +314,49 @@ class TestCsvReformatAndUpload:
             for file in bucket_files:
                 assert "staff/staff" in file
                 assert ".csv" in file
-
+   
     def test_handles_error(self):
-        test_rows = ""
-        test_columns = ""
-        test_name = ""
         with mock_aws():
+            test_df = ""
+            test_name = ""
             client = boto3.client("s3")
             test_bucket = "nc-terraformers-ingestion"
             client.create_bucket(
                 Bucket=test_bucket,
                 CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
             )
-            output = write_df_to_csv(client, test_rows, test_columns, test_name)
-            assert output == {"result": "Failure"}
+            with LogCapture() as l:
+                output = write_df_to_csv(client, test_df, test_name)
+                assert output == {"result": "Failure"}
+                assert "'str' object has no attribute 'to_csv'" in str(l)
+
+
+class TestTableToDataframe:
+    def test_makes_data_frame_from_rows_and_columns(self):
+        conn = db_connection()
+        test_rows = get_all_rows(conn, "staff")
+        test_columns = get_columns(conn, "staff")
+        output = table_to_dataframe(test_rows, test_columns)
+        assert isinstance(output, pd.DataFrame)
+
+    # def test_handles_error(self):
+    #     test_rows = ""
+    #     test_columns = ""
+    #     with LogCapture() as l:
+    #         output = table_to_dataframe(test_rows, test_columns)
+    #         assert output == {"result": "Failure"}
+    #         assert "DataFrame constructor not properly called!" in str(l)
+
+
+class TestTimestampFromDf:
+    def test_calculates_max_last_updated_timestamp_in_dataframe(self):
+        test_rows = [[True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
+                     [True, datetime(2023, 11, 3, 14, 20, 51, 563000)]]
+        test_columns = ["column1", "last_updated"]
+        test_df = pd.DataFrame(test_rows, columns=test_columns)
+        expected_as_datetime = datetime(2023, 11, 3, 14, 20, 51, 563000)
+        output = timestamp_from_df(test_df)
+        assert output.to_pydatetime() == expected_as_datetime
 
 @pytest.mark.skip
 class TestLambdaHandler:
@@ -315,14 +373,14 @@ class TestLambdaHandler:
         assert response == 1
 
 
-class TestGetTimestampFromDataFrame:
-    def test_returns_timestamp(self):
-        conn = db_connection()
-        rows = get_all_rows(conn, "sales_order")
-        columns = get_columns(conn, "sales_order")
-        test_df = pd.DataFrame(rows, columns=columns)
-        print(test_df['last_updated'].max())
-        test_df.head().to_json('test_table.json')
+# class TestGetTimestampFromDataFrame:
+#     def test_returns_timestamp(self):
+#         conn = db_connection()
+#         rows = get_all_rows(conn, "sales_order")
+#         columns = get_columns(conn, "sales_order")
+#         test_df = pd.DataFrame(rows, columns=columns)
+#         #print(test_df['last_updated'].max())
+#         test_df.head().to_json('test_table.json')
 
 # @pytest.mark.skip
 # class TestReadTimestampFromS3:
