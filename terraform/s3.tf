@@ -22,9 +22,9 @@ resource "aws_s3_object" "lambda1" {
 resource "aws_s3_object" "lambda1_layer" {
   bucket = aws_s3_bucket.code_bucket.bucket
   key    = "${var.lambda1_name}_layer/layer.zip"
-  source = data.archive_file.layer_code_for_lambda1.output_path
-  etag   = filemd5(data.archive_file.layer_code_for_lambda1.output_path)
-  depends_on = [ data.archive_file.layer_code_for_lambda1 ]
+  source = resource.archive_file.layer_code_for_lambda1.output_path
+  etag   = filemd5(resource.archive_file.layer_code_for_lambda1.output_path)
+  depends_on = [ resource.archive_file.layer_code_for_lambda1 ]
 }
 
 
