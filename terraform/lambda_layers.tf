@@ -2,7 +2,6 @@
 resource "null_resource" "create_dependencies" {
     provisioner "local-exec" {
         command = "pip install -r ${path.module}/../requirements-${var.lambda1_name}.txt -t ${path.module}/${var.lambda1_layer_deployment_dir}/python"
-
     }
     triggers = {
         dependencies = filemd5("${path.module}/../requirements-${var.lambda1_name}.txt")
@@ -10,12 +9,13 @@ resource "null_resource" "create_dependencies" {
 }
 
 ## zip file for lambda1 layer - getting the dependecies file locally and zipping it
+
 data "archive_file" "layer_code_for_lambda1" {
     type = "zip"
 
     output_path = "${path.module}/../terraform-remote-deployment/lambda1_layer.zip"
     source_dir = "${path.module}/${var.lambda1_layer_deployment_dir}"
-
+    depends_on = [null_resource.create_dependencies]
 }
 
 ## Create lambda1 layer from the zip file

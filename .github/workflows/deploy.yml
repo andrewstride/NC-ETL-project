@@ -3,21 +3,17 @@ name: Code Quality Check
 on:
   push:
     branches:
-      - CICD/-MKDIR-and-YML-files  
       - main
-      - CICD-test-py
   pull_request:
     branches:
-      - CICD/-MKDIR-and-YML-files 
       - main
-      - CICD-test-py
-
 
 jobs:
-  lint_and_security:
+
+  deploy_project:
     runs-on: ubuntu-latest
     steps:
-    - name: Set pythonpath
+    - name: Set PYTHONPATH
       run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
       
     - name: Checkout code
@@ -37,6 +33,8 @@ jobs:
         
     - name: PipAudit
       uses: pypa/gh-action-pip-audit@v1.1.0
+      with:
+        inputs: requirements.txt requirements-lambda1.txt
     
     - name: Run PEP 8 compliance check (flake8)
       run: |
@@ -47,17 +45,32 @@ jobs:
       run: |
         bandit . -s B108
 
-    - name: Configure AWS Credentials
+    - name: Configure AWS Credentials for PyTest to connect to Totesys
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_KEY }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: eu-west-2
-        
-    - name: Set pythonpath
-      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src" >> "$GITHUB_ENV"
-      
+        aws-region: ${{ secrets.AWS_REGION }}
+             
     - name: Test with pytest
       run: |
           echo $PYTHONPATH
           pytest
+
+    - name: install lambda1_layer requirements
+      run: pip install -r requirements-lambda1.txt -t terraform-remote-deployment/lambda1-layer/python
+    - name: zip lambda1_layer
+      working-directory: terraform-remote-deployment
+      run: | 
+          rm -f lambda1_layer.zip  
+          zip -r lambda1_layer.zip lambda1-layer
+
+    - name: Terraform Init
+      working-directory: terraform
+      run: terraform init
+    - name: Terraform Plan    
+      working-directory: terraform
+      run: terraform plan
+    - name: Terraform Apply
+      working-directory: terraform
+      run: terraform apply -auto-approve
