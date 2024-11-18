@@ -14,7 +14,7 @@ data "archive_file" "layer_code_for_lambda1" {
 
     output_path = "${path.module}/../terraform-remote-deployment/lambda1_layer.zip"
     source_dir = "${path.module}/${var.lambda1_layer_deployment_dir}"
-    depends_on = ["null_resource.create_dependencies"]
+    depends_on = [null_resource.create_dependencies]
 }
 
 ## Create lambda1 layer from the zip file
