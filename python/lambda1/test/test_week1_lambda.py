@@ -15,13 +15,22 @@ from src.connection import db_connection, get_db_creds
 from testfixtures import LogCapture
 from moto import mock_aws
 from unittest.mock import patch
+from testconf import aws_cred, empty_nc_terraformers_ingestion_s3, conn_fixture
 import json
 import boto3
 import pytest
 import pandas as pd
+import os
 from datetime import datetime
 
-@pytest.mark.skip
+
+@pytest.fixture()
+def test_df():
+    test_rows = [[True, datetime(2022, 11, 3, 14, 20, 51, 563000)],
+                     [True, datetime(2023, 11, 3, 14, 20, 51, 563000)]]
+    test_columns = ["column1", "last_updated"]
+    return pd.DataFrame(test_rows, columns=test_columns)
+
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
         creds = get_db_creds()
@@ -62,7 +71,6 @@ class TestGetTables:
         ]
 
 
-@pytest.mark.skip
 class TestGetRows:
     def test_returns_list(self):
         conn = db_connection()
@@ -80,7 +88,6 @@ class TestGetRows:
         for row in result:
             assert len(row) == 7
 
-@pytest.mark.skip
 class TestGetColumns:
     def test_returns_list(self):
         conn = db_connection()
@@ -99,33 +106,19 @@ class TestLogger:
             lambda_handler([], {})
             l.check_present(("root", "ERROR", "Houston, we have a major problem"))
 
-@pytest.mark.skip
 class TestWriteToS3:
-    @mock_aws
-    def test_returns_dict(self):
-        s3 = boto3.client("s3")
+    def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
         data = json.dumps({"test": "data"})
-        client = boto3.client("s3")
-        client.create_bucket(
-            Bucket="test-bucket",
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-        )
         assert isinstance(
-            write_to_s3(s3, "test-bucket", "test-file", "csv", data), dict
+            write_to_s3(s3, "nc-terraformers-ingestion", "test-file", "csv", data), dict
         )
 
-    @mock_aws
-    def test_writes_file(self):
-        timestamp = ""
-        s3 = boto3.client("s3")
+    def test_writes_file(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
         data = json.dumps({"test": "data"})
-        client = boto3.client("s3")
-        client.create_bucket(
-            Bucket="test-bucket",
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-        )
-        output = write_to_s3(s3, "test-bucket", "test-file", "csv", data)
-        objects = client.list_objects(Bucket="test-bucket")
+        output = write_to_s3(s3, "nc-terraformers-ingestion", "test-file", "csv", data)
+        objects = s3.list_objects(Bucket="nc-terraformers-ingestion")
         assert objects["Contents"][0]["Key"] == "test-file.csv"
         assert output["result"] == "Success"
 
@@ -142,16 +135,11 @@ class TestWriteToS3:
                 str(l)
             )
 
-    @mock_aws
-    def test_handles_filename_error(self):
+    def test_handles_filename_error(self, empty_nc_terraformers_ingestion_s3):
         data = True
-        client = boto3.client("s3")
-        client.create_bucket(
-            Bucket="test-bucket",
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-        )
+        s3 = empty_nc_terraformers_ingestion_s3
         with LogCapture() as l:
-            output = write_to_s3(client, "test-bucket", "test-file", "csv", data)
+            output = write_to_s3(s3, "test-bucket", "test-file", "csv", data)
             assert output["result"] == "Failure"
             assert """root ERROR
   Parameter validation failed:
@@ -159,21 +147,15 @@ Invalid type for parameter Body, value: True, type: <class 'bool'>, valid types:
                 l
             )
 
-@pytest.mark.skip
 class TestReadTimestampFromS3:
-    @mock_aws
-    def test_returns_dict(self):
-        s3 = boto3.client("s3")
+    def test_returns_dict(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
         table = "staff"
         output = read_timestamp_from_s3(s3, table)
         assert isinstance(output, dict)
 
-    @mock_aws
-    def test_returns_timestamp_dict(self):
-        s3 = boto3.client("s3")
-        s3.create_bucket(Bucket="nc-terraformers-ingestion",
-                         CreateBucketConfiguration={
-                             "LocationConstraint": "eu-west-2"})
+    def test_returns_timestamp_dict(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
         data = json.dumps({"staff": "test_timestamp"})
         s3.put_object(Bucket="nc-terraformers-ingestion",
                       Body=data,
@@ -182,18 +164,14 @@ class TestReadTimestampFromS3:
         output = read_timestamp_from_s3(s3, table)
         assert output == json.loads(data)
 
-    @mock_aws
-    def test_handles_no_timestamp(self):
-        s3 = boto3.client("s3")
-        s3.create_bucket(Bucket="nc-terraformers-ingestion",
-                         CreateBucketConfiguration={
-                             "LocationConstraint": "eu-west-2"})
+    def test_handles_no_timestamp(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
         table = "staff"
         output = read_timestamp_from_s3(s3, table)
         assert output == {"detail" : "No timestamp exists"}
 
     @mock_aws
-    def test_handles_error(self):
+    def test_handles_no_such_bucket_error(self):
         s3 = boto3.client("s3")
         table = "staff"
         with LogCapture() as l:
@@ -204,7 +182,6 @@ class TestReadTimestampFromS3:
                 l
             )
 
-@pytest.mark.skip
 class TestGetNewRows:
     def test_returns_list_of_lists(self):
         conn = db_connection()
@@ -252,38 +229,23 @@ class TestGetNewRows:
             assert output == []
             assert "root ERROR" in str(l)
 
-
 class TestWriteDfToCsv:
-    def test_returns_a_dict_with_result_key(self):
-        conn = db_connection()
-        test_rows = get_all_rows(conn, "staff")
-        test_columns = get_columns(conn, "staff")
-        test_df = pd.DataFrame(test_rows, columns=test_columns)
+    def test_returns_a_dict_with_result_key(self, empty_nc_terraformers_ingestion_s3, test_df):
         test_name = "staff"
-        with mock_aws():
-            client = boto3.client("s3")
-            test_bucket = "nc-terraformers-ingestion"
-            client.create_bucket(
-                Bucket=test_bucket,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
-            output = write_df_to_csv(client, test_df, test_name)
-            assert isinstance(output, dict)
-            assert isinstance(output["result"], str)
+        client = empty_nc_terraformers_ingestion_s3
+        output = write_df_to_csv(client, test_df, test_name)
+        assert isinstance(output, dict)
+        assert isinstance(output["result"], str)
     
-    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self):
-        conn = db_connection()
+    def test_converts_data_to_csv_and_uploads_to_s3_bucket(self, conn_fixture, empty_nc_terraformers_ingestion_s3):
+        conn = conn_fixture
         test_rows = get_all_rows(conn, "staff")
         test_columns = get_columns(conn, "staff")
         test_df = pd.DataFrame(test_rows, columns=test_columns)
         test_name = "staff"
         with mock_aws():
-            client = boto3.client("s3")
+            client = empty_nc_terraformers_ingestion_s3
             test_bucket = "nc-terraformers-ingestion"
-            client.create_bucket(
-                Bucket=test_bucket,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
             write_df_to_csv(client, test_df, test_name)
             response = client.list_objects_v2(Bucket=test_bucket).get("Contents")
             bucket_files = [file["Key"] for file in response]
@@ -315,18 +277,13 @@ class TestWriteDfToCsv:
                 assert "staff/staff" in file
                 assert ".csv" in file
    
-    def test_handles_error(self):
+    def test_handles_error(self, empty_nc_terraformers_ingestion_s3):
         with mock_aws():
             test_df = ""
             test_name = ""
-            client = boto3.client("s3")
-            test_bucket = "nc-terraformers-ingestion"
-            client.create_bucket(
-                Bucket=test_bucket,
-                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-            )
+            s3 = empty_nc_terraformers_ingestion_s3
             with LogCapture() as l:
-                output = write_df_to_csv(client, test_df, test_name)
+                output = write_df_to_csv(s3, test_df, test_name)
                 assert output == {"result": "Failure"}
                 assert "'str' object has no attribute 'to_csv'" in str(l)
 
@@ -358,6 +315,25 @@ class TestTimestampFromDf:
         output = timestamp_from_df(test_df)
         assert output.to_pydatetime() == expected_as_datetime
 
+
+class TestWriteTimeStampToS3:
+    def test_uploads_timestamp_to_s3(self, empty_nc_terraformers_ingestion_s3, test_df):
+        s3 = empty_nc_terraformers_ingestion_s3
+        output = write_timestamp_to_s3(s3, test_df, "test")
+        response = s3.list_objects(Bucket='nc-terraformers-ingestion').get("Contents")
+        bucket_files = [file["Key"] for file in response]
+        assert "test_timestamp.json" in bucket_files
+        assert output == {'result': 'Success'}
+    
+    def test_handles_df_error(self, empty_nc_terraformers_ingestion_s3):
+        s3 = empty_nc_terraformers_ingestion_s3
+        invalid_df = "invalid_df"
+        with LogCapture() as l:
+            output = write_timestamp_to_s3(s3, invalid_df, "test")
+            assert "root ERROR\n  string indices must be integers, not 'str'" in str(l)
+        assert output == {'result': 'Failure'}
+
+        
 @pytest.mark.skip
 class TestLambdaHandler:
     # @mock_aws

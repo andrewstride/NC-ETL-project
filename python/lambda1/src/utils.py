@@ -176,7 +176,7 @@ def timestamp_from_df(df):
 
 def write_timestamp_to_s3(s3, df, table):
     try:
-        timestamp_json = json.dumps({table: timestamp_from_df(df)})
+        timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
         return {'result': 'Success'}
