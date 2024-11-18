@@ -9,7 +9,7 @@ resource "aws_cloudwatch_log_group" "log_group_for_lambda1" {
     }
 }
 
-## CloudWatch metric filter for lambda 1
+## CloudWatch metric filter for lambda1
 resource "aws_cloudwatch_log_metric_filter" "log_error_count_metric_for_lambda1" {
     name            = "${var.lambda1_name}_error"
     pattern         = "ERROR"
@@ -36,5 +36,5 @@ resource "aws_cloudwatch_metric_alarm" "error_count_alarm_for_lambda1" {
     treat_missing_data          = "notBreaching"
     datapoints_to_alarm         = 1
     insufficient_data_actions   = []
-    alarm_actions               = [aws_sns_topic.alert_for_lambda1.arn]
+    alarm_actions               = [aws_sns_topic.alert_for_lambda.arn]
 }
