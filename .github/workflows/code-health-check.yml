@@ -33,6 +33,8 @@ jobs:
         
     - name: PipAudit
       uses: pypa/gh-action-pip-audit@v1.1.0
+      with:
+        inputs: requirements.txt requirements-lambda1.txt
     
     - name: Run PEP 8 compliance check (flake8)
       run: |
@@ -54,19 +56,6 @@ jobs:
       run: |
           echo $PYTHONPATH
           pytest
-    
-  # terraform:
-  #   runs-on: ubuntu-latest
-  #   needs: lint_and_security
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v3
-  #   - name: Configure AWS Credentials for Terraform to deploy to AWS
-  #     uses: aws-actions/configure-aws-credentials@v1
-  #     with:
-  #       aws-access-key-id: ${{ secrets.AWS_KEY }}
-  #       aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-  #       aws-region: ${{ secrets.AWS_REGION }}
 
     - name: install lambda1_layer requirements
       run: pip install -r requirements-lambda1.txt -t terraform-remote-deployment/lambda1-layer/python
