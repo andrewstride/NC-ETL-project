@@ -10,7 +10,7 @@ on:
 
 jobs:
 
-  lint_and_security:
+  deploy_project:
     runs-on: ubuntu-latest
     steps:
     - name: Set PYTHONPATH
