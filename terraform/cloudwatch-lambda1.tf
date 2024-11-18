@@ -9,7 +9,7 @@ resource "aws_cloudwatch_log_group" "log_group_for_lambda1" {
     }
 }
 
-## CloudWatch metric filter for lambda 1
+## CloudWatch metric filter for lambda1
 resource "aws_cloudwatch_log_metric_filter" "log_error_count_metric_for_lambda1" {
     name            = "${var.lambda1_name}_error"
     pattern         = "ERROR"
