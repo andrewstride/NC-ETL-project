@@ -17,7 +17,7 @@ def get_tables(conn):
              AND table_type='BASE TABLE';"""
     )
     tables_list = [item[0] for item in data if item[0] != "_prisma_migrations"]
-    logging.info("Table names collected")
+    logging.info("Table names collected from DB")
     return tables_list
 
 
@@ -37,7 +37,7 @@ def get_all_rows(conn, table):
         logging.info(f"All rows from {table} collected")
         return data
     else:
-        logging.error("Table not found")
+        logging.error(f"Table {table} not found")
         return ["Table not found"]
 
 
@@ -58,7 +58,7 @@ def get_columns(conn, table):
         logging.info(f"Columns from {table} collected")
         return columns
     else:
-        logging.error("Table not found")
+        logging.error(f"Table {table} not found")
         return ["Table not found"]
 
 
@@ -98,6 +98,8 @@ def read_timestamp_from_s3(s3, table):
         filename = f"{table}_timestamp.json"
         response = s3.get_object(Bucket="nc-terraformers-ingestion", Key=filename)
         body = response["Body"]
+        timestamp = json.loads(body.read().decode())
+        logging.info(f"read {timestamp} from s3")
         return json.loads(body.read().decode())
     except ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
@@ -125,6 +127,7 @@ def get_new_rows(conn, table, timestamp):
                             'YYYY-MM-DD HH24:MI:SS.US');""",
                 timestamp=timestamp,
             )
+            logging.info(f"{len(data)} rows collected from {table}")
             return data
         else:
             logging.error("Table not found")
@@ -148,8 +151,10 @@ def write_df_to_csv(s3, df, table_name):
     timestamp = str(datetime.now())
     try:
         with StringIO() as csv:
+            logging.info(f"converting {table_name} dataframe to csv")
             df.to_csv(csv, index=False)
             data = csv.getvalue()
+            logging.info(f"writing {table_name}_{timestamp}.csv")
             response = write_to_s3(
                 s3,
                 "nc-terraformers-ingestion",
@@ -158,6 +163,7 @@ def write_df_to_csv(s3, df, table_name):
                 data,
             )
             if response["result"] == "Success":
+                logging.info(f"{table_name}_{timestamp}.csv successfully written")
                 return {
                     "result": "Success",
                     "detail": "Converted to csv, uploaded to ingestion bucket",
@@ -169,20 +175,24 @@ def write_df_to_csv(s3, df, table_name):
 
 def table_to_dataframe(rows, columns):
     try:
+        logging.info("converting to dataframe")
         return pd.DataFrame(rows, columns=columns)
     except Exception as e:
-        logging.error(e)
+        logging.error(f"dataframe conversion unsuccessful: {e}")
 
 
 def timestamp_from_df(df):
     try:
-        return df["last_updated"].max()
+        timestamp = df["last_updated"].max()
+        logging.info(f"{timestamp} collected from dataframe")
+        return timestamp
     except KeyError as e:
         logging.error({"column not found": e})
 
 
 def write_timestamp_to_s3(s3, df, table):
     try:
+        logging.info(f"converting {table} timestamp to JSON")
         timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
