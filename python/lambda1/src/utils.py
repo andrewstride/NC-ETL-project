@@ -101,11 +101,12 @@ def read_timestamp_from_s3(s3, table):
         timestamp = json.loads(body.read().decode())
         logging.info(f"read {timestamp} from s3")
         return timestamp
-    except ClientError as e:
+    except Exception as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
+            logging.info(f"Timestamp for {table} not found")
             return {"detail": "No timestamp exists"}
-        logging.error(e)
-        return {"result": "Failure"}
+        logging.error(f"Error collecting timestamp {e}")
+        return {"detail": "No timestamp exists"}
 
 
 def get_new_rows(conn, table, timestamp):
