@@ -100,7 +100,7 @@ def read_timestamp_from_s3(s3, table):
         body = response["Body"]
         timestamp = json.loads(body.read().decode())
         logging.info(f"read {timestamp} from s3")
-        return json.loads(body.read().decode())
+        return timestamp
     except ClientError as e:
         if e.response["Error"]["Code"] == "NoSuchKey":
             return {"detail": "No timestamp exists"}
