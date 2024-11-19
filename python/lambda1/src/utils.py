@@ -17,6 +17,7 @@ def get_tables(conn):
              AND table_type='BASE TABLE';"""
     )
     tables_list = [item[0] for item in data if item[0] != "_prisma_migrations"]
+    logging.info("Table names collected")
     return tables_list
 
 
@@ -33,6 +34,7 @@ def get_all_rows(conn, table):
     """
     if table in get_tables(conn):
         data = conn.run(f"SELECT * FROM {identifier(table)};")
+        logging.info(f"All rows from {table} collected")
         return data
     else:
         logging.error("Table not found")
@@ -53,6 +55,7 @@ def get_columns(conn, table):
     if table in get_tables(conn):
         conn.run(f"SELECT * FROM {identifier(table)};")
         columns = [col["name"] for col in conn.columns]
+        logging.info(f"Columns from {table} collected")
         return columns
     else:
         logging.error("Table not found")
@@ -74,6 +77,7 @@ def write_to_s3(s3, bucket_name, filename, format, data):
     """
     try:
         s3.put_object(Bucket=bucket_name, Key=f"{filename}.{format}", Body=data)
+        logging.info(f"{filename}.{format} written to s3")
     except (ClientError, ParamValidationError) as e:
         logging.error(e)
         return {"result": "Failure"}
@@ -135,8 +139,7 @@ def write_df_to_csv(s3, df, table_name):
 
     Paramaters:
         s3: Boto3.client('s3') connection
-        Rows (list of lists): the rows of the table
-        Columns (list): the columns of the table
+        Pandas DataFrame
         Table_name (str): the name of the table
 
     Returns:

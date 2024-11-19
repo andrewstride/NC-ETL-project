@@ -17,6 +17,7 @@ import logging
 import boto3
 
 logger = logging.getLogger()
+logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
@@ -24,11 +25,11 @@ def lambda_handler(event, context):
         conn = db_connection()
         s3 = boto3.client("s3")
         for table in get_tables(conn):
-            timestamp_from_df = read_timestamp_from_s3(s3, table)
-            if timestamp_from_df == {"detail": "No timestamp exists"}:
+            timestamp_from_s3 = read_timestamp_from_s3(s3, table)
+            if timestamp_from_s3 == {"detail": "No timestamp exists"}:
                 rows = get_all_rows(conn, table)
             else:
-                rows = get_new_rows(conn, table, timestamp_from_df)
+                rows = get_new_rows(conn, table, timestamp_from_s3[table])
             columns = get_columns(conn, table)
 
             if rows != []:
