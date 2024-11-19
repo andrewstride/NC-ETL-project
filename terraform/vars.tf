@@ -1,3 +1,9 @@
+## Exclude following directories from Lambda compilation
+variable "lambda_comp_exclude_list" {
+    type = list(string)
+    default = ["test", "src/__pycache__", ".pytest_cache"]
+}
+
 ## Name for lambda1
 variable "lambda1_name" {
   type = string
@@ -20,4 +26,29 @@ variable "lambda1_layer_deployment_dir" {
 variable "lambda1_source_dir" {
     type = string
     default = "../python/lambda1"
+}
+
+
+## Name for lambda2
+variable "lambda2_name" {
+  type = string
+  default = "lambda2"
+}
+
+## Deployment directory for lambda2
+variable "lambda2_deployment_dir" {
+    type = string
+    default = "../terraform-remote-deployment/lambda2"
+}
+
+## Deployment directory for lambda2 layer
+variable "lambda2_layer_deployment_dir" {
+    type = string
+    default = "../terraform-remote-deployment/lambda2-layer"
+}
+
+## Source directory for lambda2
+variable "lambda2_source_dir" {
+    type = string
+    default = "../python/lambda2"
 }

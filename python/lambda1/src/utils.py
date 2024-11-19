@@ -1,5 +1,6 @@
 from pg8000.exceptions import DatabaseError
 from botocore.exceptions import ClientError, ParamValidationError
+import botocore
 from pg8000.native import identifier
 import logging
 import json
@@ -79,34 +80,12 @@ def write_to_s3(s3, bucket_name, filename, format, data):
     return {"result": "Success"}
 
 
-def fetch_last_timestamps_from_db(conn):
-    """Fetches latest timestamp from db
-
-    Parameters:
-        Connection: PG8000 Connection to database
-
-    Returns:
-        Dictionary of {'Table Name': 'Timestamp string'}
-
-    """
-    tables = get_tables(conn)
-    output_dict = {}
-    for table in tables:
-        try:
-            data = conn.run(f"SELECT max(last_updated) FROM {identifier(table)};")
-            output_dict[table] = f"{data[0][0]}"
-        except DatabaseError as e:
-            logging.error(e)
-    return output_dict
-
-
 def read_timestamp_from_s3(s3, table):
-    """Reads file from given s3 bucket
+    """Reads timestamp of given table from s3 ingestion bucket
 
     Parameters:
         s3: Boto3.client('s3') connection
-        Bucket Name (str)
-        File Name (str)
+        Table Name (str)
 
     Returns:
         Dictionary of format {'Table Name':'Timestamp String'}
@@ -117,28 +96,10 @@ def read_timestamp_from_s3(s3, table):
         body = response["Body"]
         return json.loads(body.read().decode())
     except ClientError as e:
+        if e.response["Error"]["Code"] == "NoSuchKey":
+            return {"detail": "No timestamp exists"}
         logging.error(e)
         return {"result": "Failure"}
-
-
-def tables_and_timestamps_to_query(db_timestamps, s3_timestamps):
-    """Produces dictionary of tables to query and timestamps to query after
-
-    Parameters:
-        Timestamps from DB (dict): Timestamps table
-        Timestamps from s3 (dict): Timestamps table
-
-    Returns:
-        returns a dict: {'table name':'timestamp from s3'} where timestamp differs
-    """
-    output_dict = {}
-    for table in db_timestamps:
-        try:
-            if s3_timestamps[table] != db_timestamps[table]:
-                output_dict[table] = s3_timestamps[table]
-        except KeyError as e:
-            logging.error({"KeyError": str(e)})
-    return output_dict
 
 
 def get_new_rows(conn, table, timestamp):
@@ -152,17 +113,20 @@ def get_new_rows(conn, table, timestamp):
     Returns:
         List (list): The lists are rows from table
     """
-    if table in get_tables(conn):
-        data = conn.run(
-            f"""SELECT * FROM {identifier(table)}
-                         WHERE last_updated > to_timestamp(:timestamp,
-                         'YYYY-MM-DD HH24:MI:SS.US');""",
-            timestamp=timestamp,
-        )
-        return data
-    else:
-        logging.error("Table not found")
-        return ["Table not found"]
+    try:
+        if table in get_tables(conn):
+            data = conn.run(
+                f"""SELECT * FROM {identifier(table)}
+                            WHERE last_updated > to_timestamp(:timestamp,
+                            'YYYY-MM-DD HH24:MI:SS.US');""",
+                timestamp=timestamp,
+            )
+            return data
+        else:
+            logging.error("Table not found")
+    except Exception as e:
+        logging.error(e)
+    return []
 
 
 def write_df_to_csv(s3, df, table_name):
@@ -195,23 +159,31 @@ def write_df_to_csv(s3, df, table_name):
                     "result": "Success",
                     "detail": "Converted to csv, uploaded to ingestion bucket",
                 }
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(e)
     return {"result": "Failure"}
 
 
 def table_to_dataframe(rows, columns):
-    return pd.DataFrame(rows, columns=columns)
+    try:
+        return pd.DataFrame(rows, columns=columns)
+    except Exception as e:
+        logging.error(e)
+
 
 def timestamp_from_df(df):
-    return df['last_updated'].max()
+    try:
+        return df["last_updated"].max()
+    except KeyError as e:
+        logging.error({"column not found": e})
+
 
 def write_timestamp_to_s3(s3, df, table):
     try:
-        timestamp_json = json.dumps({table: timestamp_from_df(df)})
+        timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
-        return {'result': 'Success'}
+        return {"result": "Success"}
     except Exception as e:
         logging.error(e)
-        return {'result': 'Failure'}
+        return {"result": "Failure"}

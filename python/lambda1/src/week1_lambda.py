@@ -4,9 +4,7 @@ from src.utils import (
     get_columns,
     write_to_s3,
     get_tables,
-    fetch_last_timestamps_from_db,
     read_timestamp_from_s3,
-    tables_and_timestamps_to_query,
     get_new_rows,
     write_df_to_csv,
     table_to_dataframe,
@@ -26,17 +24,21 @@ def lambda_handler(event, context):
         conn = db_connection()
         s3 = boto3.client("s3")
         for table in get_tables(conn):
-            rows = get_all_rows(conn, table)
-            columns = [get_columns(conn, table)]
-            df = table_to_dataframe(rows, columns)
-            write_df_to_csv(s3, df, table)
-            write_timestamp_to_s3(s3, df, table)
+            timestamp_from_df = read_timestamp_from_s3(s3, table)
+            if timestamp_from_df == {"detail": "No timestamp exists"}:
+                rows = get_all_rows(conn, table)
+            else:
+                rows = get_new_rows(conn, table, timestamp_from_df)
+            columns = get_columns(conn, table)
 
-            
+            if rows != []:
+                df = table_to_dataframe(rows, columns)
+                write_df_to_csv(s3, df, table)
+                write_timestamp_to_s3(s3, df, table)
+            else:
+                logging.info(f"No new data in table {table} to upload.")
 
-
-            
-        logger.error("Houston, we have a %s", "major problem", exc_info=True)
+        logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
         return {"response": 200}
 
     except Exception as e:
