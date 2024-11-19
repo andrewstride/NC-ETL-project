@@ -104,7 +104,7 @@ def read_timestamp_from_s3(s3, table):
         logging.info(f"read {timestamp} from s3")
         return timestamp
     except Exception as e:
-        if e.response["Error"]["Code"] == "NoSuchKey" or "403" in str(e.response["Error"]["Code"]):
+        if e.response["Error"]["Code"] == "NoSuchKey" or e.response["Error"]["Code"] == "AccessDenied":
             logging.info(f"Timestamp for {table} not found")
             return {"detail": "No timestamp exists"}
         logging.warning(f"Response whilst collecting timestamp: {e}. Will create new file")
