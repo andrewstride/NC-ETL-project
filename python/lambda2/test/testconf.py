@@ -12,7 +12,7 @@ def aws_cred():
     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
 @pytest.fixture(scope="function")
-def processed_bucket():
+def processing_bucket():
     with mock_aws():
         s3 = boto3.client("s3")
         test_bucket = "nc-terraformers-processing"
@@ -22,7 +22,7 @@ def processed_bucket():
         )
         yield s3
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def ingestion_bucket():
     with mock_aws():
         s3 = boto3.client("s3")
