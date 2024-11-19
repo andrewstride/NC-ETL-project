@@ -92,15 +92,3 @@ resource "aws_iam_role_policy" "role_policy_for_lambda2_sns" {
     ]
   })
 }
-
-## Policy for lambda2, for lambda2 to get secret value
-resource "aws_iam_policy" "get_secret_value_policy_for_lambda2" {
-    name = "get_secret_value_policy_for_${var.lambda2_name}"
-    policy = data.aws_iam_policy_document.get_secret_value_policy.json
-}
-
-## Attach the get secret value policy to the lambda2 iam role
-resource "aws_iam_role_policy_attachment" "get_secret_value_attachment_for_lambda2" {
-    role = aws_iam_role.role_for_lambda2.name
-    policy_arn = aws_iam_policy.get_secret_value_policy_for_lambda2.arn
-}
