@@ -8,7 +8,7 @@ resource "aws_iam_role" "role_for_lambda3" {
 data "aws_iam_policy_document" "s3_get_object_document_lambda3" {
     statement {
         effect = "Allow"
-        actions = ["S3:PutObject"]
+        actions = ["S3:GetObject"]
         resources = ["${aws_s3_bucket.processing_bucket.arn}/*"]
     }
 }
