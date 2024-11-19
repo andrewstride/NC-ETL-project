@@ -104,11 +104,18 @@ def read_timestamp_from_s3(s3, table):
         logging.info(f"read {timestamp} from s3")
         return timestamp
     except Exception as e:
-        if e.response["Error"]["Code"] == "NoSuchKey" or e.response["Error"]["Code"] == "AccessDenied":
-            logging.info(f"Timestamp for {table} not found")
+        if (
+            e.response["Error"]["Code"] == "NoSuchKey"
+            or e.response["Error"]["Code"] == "AccessDenied"
+        ):
+            logging.info(
+                f"Response whilst collecting timestamp: {e}. Will create new file"
+            )
             return {"detail": "No timestamp exists"}
-        logging.warning(f"Response whilst collecting timestamp: {e}. Will create new file")
-        return {"detail": "No timestamp exists"}
+        logging.error(
+            f"Unexpected error whilst collecting timestamp: {e}. Will create new file"
+        )
+        return e
 
 
 def get_new_rows(conn, table, timestamp, table_list):
