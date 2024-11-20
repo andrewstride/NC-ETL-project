@@ -8,6 +8,9 @@ PROFILE = default
 PIP:=pip
 ZIP:=zip
 
+## Run all commands.
+all: create-environment requirements dev-setup run-checks layer-setup clean
+
 ## Create python interpreter environment.
 create-environment:
 	@echo ">>> About to create environment: $(PROJECT_NAME)..."
@@ -95,7 +98,7 @@ check-coverage:
 ## Run all checks
 run-checks: security-test run-black unit-test check-coverage
 
-## Install lambda layers
+## Prepare lambda layers
 layer-setup:
 	$(call execute_in_env, $(PIP) install -r requirements-lambda1.txt \
 					-t terraform-remote-deployment/lambda1-layer/python)
@@ -109,4 +112,10 @@ layer-setup:
 					-t terraform-remote-deployment/lambda3-layer/python)
 	$(call execute_in_env, cd terraform-remote-deployment && \
 	$(ZIP) -r lambda3_layer.zip lambda3-layer/python)
+
+## Clean up lambda layer dependencies
+clean:
+	$(call execute_in_env, rm -rf terraform-remote-deployment/lambda1-layer \
+						&& rm -rf terraform-remote-deployment/lambda2-layer \
+						&& rm -rf terraform-remote-deployment/lambda3-layer)
 
