@@ -233,9 +233,9 @@ class TestReadTimestampFromS3:
         table = "staff"
         with LogCapture() as l:
             output = read_timestamp_from_s3(s3, table)
-            assert output["result"] == "Failure"
+            assert output == {"detail": "No timestamp exists"}
             assert """root ERROR
-  An error occurred (NoSuchBucket) when calling the GetObject operation: The specified bucket does not exist""" in str(
+  Error collecting timestamp An error occurred (NoSuchBucket) when calling the GetObject operation: The specified bucket does not exist""" in str(
                 l
             )
 
