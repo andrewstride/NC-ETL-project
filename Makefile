@@ -63,7 +63,11 @@ dev-setup: bandit pip-audit black flake8 pytest-cov
 
 ## Run the security test (bandit + pip-audit)
 security-test:
-	$(call execute_in_env, pip-audit -r requirements.txt)
+	$(call execute_in_env, pip-audit -r requirements.txt \
+									 -r	requirements-lambda1.txt \
+									 -r	requirements-lambda2.txt \
+									 -r	requirements-lambda3.txt )
+
 	$(call execute_in_env, bandit -lll python/lambda1/src/*.py \
 								 	python/lambda1/test/*.py \
 								 	python/lambda2/src/*.py \
