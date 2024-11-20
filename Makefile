@@ -90,7 +90,10 @@ unit-test:
 
 ## Run the coverage check
 check-coverage:
-	$(call execute_in_env, PYTHONPATH=${PYTHONPATH} pytest --cov=src python/lambda1/test)
+	$(call execute_in_env, PYTHONPATH=${PYTHONPATH} pytest --cov=src \
+									 python/lambda1/test \
+									 python/lambda2/test \
+									 python/lambda3/test)
 
 ## Run all checks
 run-checks: security-test run-black unit-test check-coverage
