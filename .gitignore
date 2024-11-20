@@ -19,3 +19,5 @@ terraform-remote-deployment/
 
 *.zip
 
+#ignore of temp code runner file.
+**/tempCodeRunnerFile.py
