@@ -55,8 +55,8 @@ variable "lambda2_source_dir" {
 
 ## Name for lambda3
 variable "lambda3_name" {
-  type = string
-  default = "lambda3"
+    type = string
+    default = "lambda3"
 }
 
 ## Deployment directory for lambda3
