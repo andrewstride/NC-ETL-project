@@ -339,7 +339,19 @@ class TestWriteDfToCsv:
         with LogCapture() as l:
             output = write_df_to_csv(s3, test_df, test_name)
             assert output == {"result": "Failure"}
-            assert "'str' object has no attribute 'to_csv'" in str(l)
+            assert "string indices must be integers, not 'str'" in str(l)
+
+    def test_writes_last_updated_timestamp_from_df(
+        self, test_df, empty_nc_terraformers_ingestion_s3
+    ):
+        s3 = empty_nc_terraformers_ingestion_s3
+        last_updated_from_df = timestamp_from_df(test_df)
+        write_df_to_csv(s3, test_df, "test")
+        response = s3.list_objects_v2(Bucket="nc-terraformers-ingestion").get(
+            "Contents"
+        )
+        bucket_files = [file["Key"] for file in response]
+        assert f"test/test_{str(last_updated_from_df)}.csv" in bucket_files
 
 
 class TestTableToDataframe:
