@@ -15,11 +15,10 @@ data "aws_iam_policy_document" "Cloudwatch_log_document" {
     statement {
         effect = "Allow"
         actions = [
-            # "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents"
             ]
-        resources = ["arn:aws:logs:*:*:*"] # Is this ok?
+        resources = ["arn:aws:logs:*:*:*"]
     }
 }
 

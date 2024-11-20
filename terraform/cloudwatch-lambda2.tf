@@ -1,7 +1,7 @@
 ## CloudWatch log group for lambda2
 resource "aws_cloudwatch_log_group" "log_group_for_lambda2" {
     name                = "/aws/lambda/${var.lambda2_name}"
-    retention_in_days   = 0 # never expires
+    retention_in_days   = 3 # Set to 3 days to demonstrate functionality during project duration
     tags                = {
         name            = "${var.lambda2_name} log group"
         environment     = "dev"

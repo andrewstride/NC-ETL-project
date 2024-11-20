@@ -4,7 +4,9 @@ venv/
 
 #python and pytest
 **/*pycache
+**pycache**
 **/*.pyc
+*.pytest_cache
 *test_timestamp_table.json*
 *.coverage*
 *test_table.json*

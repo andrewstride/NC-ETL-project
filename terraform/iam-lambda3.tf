@@ -13,7 +13,7 @@ data "aws_iam_policy_document" "s3_get_object_document_lambda3" {
     }
 }
 
-## Policy for lambda3 to have the S3 GET object permission to PROCESSING
+## Policy for lambda3 to have the S3 GET object permission from PROCESSING
 resource "aws_iam_policy" "s3_get_policy_for_lambda3" {
     name = "s3_get_policy_for_${var.lambda3_name}"
     policy = data.aws_iam_policy_document.s3_get_object_document_lambda3.json
