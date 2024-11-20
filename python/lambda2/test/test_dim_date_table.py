@@ -1,9 +1,13 @@
-import boto3
-from src.dim_date_table import dim_date_table
+import pytest
+import pandas
+from src.dim_date_table import dim_date
 
-class Test_reading_data:
-    def test_reading_data_from_s3_ingestion(self):
-        test = dim_date_table()
-        print(test)
-        assert isinstance(test, list)
-       
+class TestDateTable:
+    def test_dim_date_table_length(self):
+        test = dim_date()
+        assert len(test) == 9497
+    
+    def test_dim_date_table_type(self):
+        test = dim_date()
+        assert test != isnull
+        print(dir(test))

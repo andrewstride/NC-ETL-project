@@ -1,18 +1,21 @@
-from datetime import datetime
-from pprint import pprint
-import pandas
-import boto3
+
+import pandas as pd
 
 
-def dim_date_table():
-    s3_client = boto3.client("s3")
-    bucket_name = "nc-terraformers-ingestion"
-    list_object = s3_client.list_objects_v2(Bucket=bucket_name).get("Contents")
-    # creates a list of all the csv files
-    csv_list = [obj['Key'] for obj in list_object if obj['Key'].endswith('.csv')]
-    # for obj in list_object:
-    #     if obj['Key'].endswith('.csv'):
-    #         csv_list.append(obj['Key'])
-        # print(f"file_name: {obj['Key']}")
-    return csv_list
+def dim_date(start='2000-01-01', end='2025-12-31'):
+    
+    df = pd.DataFrame({"date_id" : pd.date_range(start, end)})
+
+    
+    df["year"] = df.date_id.dt.year
+    df["month"] = df.date_id.dt.month
+    df["day"] = df.date_id.dt.day
+    df["day_of_week"] = df.date_id.dt.dayofweek + 1 # range from Monday- sunday(1-7)
+    df["day_name"] = df.date_id.dt.day_name()
+    df["month_name"] = df.date_id.dt.month_name()
+    df["quarter"] = df.date_id.dt.quarter    
+    return df
+
+
+print(dim_date())
 
