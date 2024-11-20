@@ -27,7 +27,7 @@ jobs:
         
     - name: Install requirements
       run: make requirements
-      
+
     - name: Dev setup
       run: make dev-setup
 
@@ -45,7 +45,7 @@ jobs:
       run: make run-checks
 
     - name: Prepare Lambda layers
-      run: layer-setup
+      run: make layer-setup
              
     - name: Terraform Init
       working-directory: terraform
