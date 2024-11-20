@@ -1,18 +1,55 @@
 from datetime import datetime
-from pprint import pprint
-import pandas
+# from pprint import pprint
+import pandas as pd
 import boto3
 
 
-def dim_date_table():
-    s3_client = boto3.client("s3")
-    bucket_name = "nc-terraformers-ingestion"
-    list_object = s3_client.list_objects_v2(Bucket=bucket_name).get("Contents")
-    # creates a list of all the csv files
-    csv_list = [obj['Key'] for obj in list_object if obj['Key'].endswith('.csv')]
-    # for obj in list_object:
-    #     if obj['Key'].endswith('.csv'):
-    #         csv_list.append(obj['Key'])
-        # print(f"file_name: {obj['Key']}")
-    return csv_list
+#   date_id date
+#   year int 
+#   month int 
+#   day int 
+#   day_of_week int 
+#   day_name varchar 
+#   month_name varchar 
+#   quarter 
 
+start = '2022-01-01'
+end = '2025-12-31'
+
+def dim_date_table(start, end):
+
+    days_names = {
+    i: name for i, name in enumerate(['Monday', 'Tuesday', 'Wednesday',
+                    'Thursday', 'Friday', 'Saturday',
+                    'Sunday'])
+    }
+
+    month_names = {
+    i: name for i, name in enumerate([ 'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December'], start=1)
+    }
+
+
+    df = pd.DataFrame({"Date": pd.date_range(start, end)})
+
+    df["year"] = df.Date.dt.year
+    df["month"] = df.Date.dt.month
+    df["day"] = df.Date.dt.day
+    df["day_of_week"] = df.Date.dt.weekday
+    df["day_name"] = df.Date.dt.day_of_week.map(days_names.get)
+    df["month_name"] = df.Date.dt.month.map(month_names.get)
+    df["quarter"] = df.Date.dt.quarter
+    df["year_half"] = (df.quarter + 1) // 2
+    return print(df.tail())
+
+dim_date_table(start, end)
