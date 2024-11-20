@@ -50,7 +50,7 @@ resource "aws_lambda_function" "lambda3" {
     s3_bucket = aws_s3_bucket.code_bucket.bucket
     s3_key = "lambda3/${var.lambda3_name}.zip"
     role = aws_iam_role.role_for_lambda3.arn
-    handler = "src/week1_lambda.lambda_handler"
+    handler = "src/week3_lambda.lambda_handler"
 
     timeout = 180
     source_code_hash = data.archive_file.lambda3_handler_func.output_base64sha256 # check for code updates
