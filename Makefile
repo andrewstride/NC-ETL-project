@@ -52,8 +52,12 @@ black:
 pytest-cov:
 	$(call execute_in_env, $(PIP) install pytest-cov)
 
+## Install flake8
+flake8:
+	$(call execute_in_env, $(PIP) install flake8)
+
 ## Set up dev requirements (bandit, pip-audit, black)
-dev-setup: bandit pip-audit black pytest-cov
+dev-setup: bandit pip-audit black flake8 pytest-cov
 
 # Build / Run
 
