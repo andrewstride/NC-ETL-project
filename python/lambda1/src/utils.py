@@ -151,7 +151,7 @@ def write_df_to_csv(s3, df, table_name):
     """Takes rows, columns, and name of a table, converts it
     to csv file format, and uploads the file to s3 Ingestion bucket.
 
-    Paramaters:
+    Parameters:
         s3: Boto3.client('s3') connection
         Pandas DataFrame
         Table_name (str): the name of the table
@@ -159,8 +159,8 @@ def write_df_to_csv(s3, df, table_name):
     Returns:
         Dict (dict): {"result": "Failure/Success"} + "detail" if successful.
     """
-    timestamp = str(datetime.now())
     try:
+        timestamp = str(timestamp_from_df(df))
         with StringIO() as csv:
             logging.info(f"converting {table_name} dataframe to csv")
             df.to_csv(csv, index=False)
@@ -185,6 +185,14 @@ def write_df_to_csv(s3, df, table_name):
 
 
 def table_to_dataframe(rows, columns):
+    """Converts rows and columns into Pandas Dataframe
+
+    Parameters:
+    Rows (list): List of lists containing values
+    Columns (list): List of strings
+
+    Returns:
+    Pandas Dataframe"""
     try:
         logging.info("converting to dataframe")
         return pd.DataFrame(rows, columns=columns)
@@ -193,6 +201,11 @@ def table_to_dataframe(rows, columns):
 
 
 def timestamp_from_df(df):
+    """Gets most recent timestamp as Datetime object from DataFrame
+
+    Parameters: Pandas Dataframe
+
+    Returns: Datetime object"""
     try:
         timestamp = df["last_updated"].max()
         logging.info(f"{timestamp} collected from dataframe")
@@ -202,6 +215,16 @@ def timestamp_from_df(df):
 
 
 def write_timestamp_to_s3(s3, df, table):
+    """
+    Writes timestamp to s3 as JSON dictionary file
+
+    Parameters:
+    s3: Boto3.client('s3') connection
+    Pandas Dataframe
+    Table (str): Table name to be used in filename
+
+    Returns:
+    Dict of {"result": "Success"/"Failure"}"""
     try:
         logging.info(f"converting {table} timestamp to JSON")
         timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
