@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src:$(pwd)/python/lambda2:$(pwd)/python/lambda2/src" >> "$GITHUB_ENV"
+      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src:$(pwd)/python/lambda2:$(pwd)/python/lambda2/src:$(pwd)/python/lambda3:$(pwd)/python/lambda3/src" >> "$GITHUB_ENV"
       
     - name: Checkout code
       uses: actions/checkout@v3
@@ -34,7 +34,7 @@ jobs:
     - name: PipAudit
       uses: pypa/gh-action-pip-audit@v1.1.0
       with:
-        inputs: requirements.txt requirements-lambda1.txt requirements-lambda2.txt
+        inputs: requirements.txt requirements-lambda1.txt requirements-lambda2.txt requirements-lambda3.txt
     
     - name: Run PEP 8 compliance check (flake8)
       run: |
@@ -71,7 +71,15 @@ jobs:
       working-directory: terraform-remote-deployment
       run: | 
           rm -f lambda2_layer.zip  
-          zip -r lambda2_layer.zip lambda2-layer       
+          zip -r lambda2_layer.zip lambda2-layer  
+          
+    - name: install lambda3_layer requirements
+      run: pip install -r requirements-lambda3.txt -t terraform-remote-deployment/lambda3-layer/python
+    - name: zip lambda3_layer
+      working-directory: terraform-remote-deployment
+      run: | 
+          rm -f lambda3_layer.zip  
+          zip -r lambda3_layer.zip lambda3-layer  
              
     - name: Terraform Init
       working-directory: terraform
