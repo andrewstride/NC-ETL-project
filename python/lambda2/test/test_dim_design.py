@@ -5,20 +5,13 @@ from testfixtures import LogCapture
 import pandas as pd
 from io import BytesIO
 
-
 class TestDimDesign:
     @patch("src.dim_design.datetime")
     def test_uploads_parquet_object_to_processing_bucket(self,
                                                          mock_datetime,
-                                                         processing_bucket,
-                                                         ingestion_bucket):
-        processing_bucket.upload_file("test/design_timestamp.json",
-                                      "nc-terraformers-ingestion",
-                                      "design_timestamp.json")
-        processing_bucket.upload_file(
-            "test/design_2024-11-18 10_56_09.970000.csv",
-             "nc-terraformers-ingestion",
-             "design/design_2024-11-18 10:56:09.970000.csv")
+                                                         ingestion_bucket,
+                                                         processing_bucket
+                                                         ):
         mock_datetime.now.return_value = "timestamp"
         output = dim_design(processing_bucket)
         assert output == {"result": "Success"}
@@ -41,12 +34,6 @@ class TestDimDesign:
                                            mock_datetime,
                                            processing_bucket,
                                            ingestion_bucket):
-        processing_bucket.upload_file("test/design_timestamp.json",
-                       "nc-terraformers-ingestion",
-                       "design_timestamp.json")
-        processing_bucket.upload_file("test/design_2024-11-18 10_56_09.970000.csv",
-                       "nc-terraformers-ingestion",
-                       "design/design_2024-11-18 10:56:09.970000.csv")
         mock_datetime.now.return_value = "timestamp"
         output = dim_design(processing_bucket)
 
@@ -59,4 +46,7 @@ class TestDimDesign:
                                     "design_name",
                                     "file_location",
                                     "file_name"]
-        assert list(df.iloc[0]) == [8, 'Wooden', '/usr', 'wooden-20220717-npgz.json']
+        assert list(df.iloc[0]) == [1,
+                                    "Steel",
+                                    "/private",
+                                    "steel-20220717-npgz.json"]

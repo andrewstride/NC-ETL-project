@@ -11,12 +11,15 @@ def dim_design(s3):
         ingestion_bucket = "nc-terraformers-ingestion"
         processing_bucket = "nc-terraformers-processing"
 
+        # design_files = s3.list_objects_v2(Bucket=ingestion_bucket,
+        #                               Prefix="design/").get("Contents")
+        # latest_file = max([file["Key"] for file in design_files])
+
         latest_timestamp_json = s3.get_object(
             Bucket=ingestion_bucket,
             Key="design_timestamp.json")
         latest_timestamp = json.loads(latest_timestamp_json[
             "Body"].read().decode("utf-8"))["design"]
-
         latest_data = s3.get_object(
             Bucket=ingestion_bucket,
             Key=f"design/design_{latest_timestamp}.csv"

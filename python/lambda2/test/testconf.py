@@ -31,29 +31,26 @@ def ingestion_bucket():
             Bucket=test_bucket,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
+        s3.upload_file("test/design_timestamp.json",
+                                      "nc-terraformers-ingestion",
+                                      "design_timestamp.json")
+        s3.upload_file("test/design_timestamp.json",
+                                      "nc-terraformers-ingestion",
+                                      "staff_timestamp.json")
+        s3.upload_file(
+            "test/design_2024-11-18 10_56_09.970000.csv",
+             "nc-terraformers-ingestion",
+             "design/design_2024-11-18 10:56:09.970000.csv")
+        s3.upload_file(
+            "test/design_2024-11-18 16_47_28.291856.csv",
+             "nc-terraformers-ingestion",
+             "design/design_2024-11-18 16_47_28.291856.csv")
+        s3.upload_file(
+            "test/design_2024-11-18 19_15_01.821957.csv",
+             "nc-terraformers-ingestion",
+             "design/design_2024-11-18 19_15_01.821957.csv")
+        s3.upload_file(
+            "test/staff_2024-11-18 16_53_23.353536.csv",
+             "nc-terraformers-ingestion",
+             "staff/staff_2024-11-18 19_15_01.821957.csv")
         yield s3
-
-# @pytest.fixture()
-# def ingestion_bucket_with_objects(ingestion_bucket):
-#     s3 = ingestion_bucket
-#     bucket_name = "nc-terraformers-ingestion"
-
-#     ''' Make file1 '''
-#     with open('file1.txt', 'w', encoding='utf-8') as file:
-#         file.write("Text of file1!")
-#         file1_name = 'design/design_2024-11-18 16:53:23.353536.csv'
-#     s3.upload_file('file1.txt', bucket_name, file1_name)
-
-#     ''' Make file2 '''
-#     with open('file2.txt', 'w', encoding='utf-8') as file:
-#         file.write("Text of file2!")
-#         file2_name = 'design/design_2024-11-18 19:15:01.821957.csv'
-#     s3.upload_file('file2.txt', bucket_name, file2_name)
-
-#     ''' Make file3 '''
-#     with open('file3.txt', 'w', encoding='utf-8') as file:
-#         file.write("Text of file3!")
-#         file3_name = 'not a design table!.csv'
-#     s3.upload_file('file3.txt', bucket_name, file3_name)
-
-#     yield s3
