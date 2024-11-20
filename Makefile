@@ -1,14 +1,8 @@
-#################################################################################
-#
-# Makefile to build the project
-#
-#################################################################################
-
 PROJECT_NAME = terraformers
 REGION = eu-west-2
 PYTHON_INTERPRETER = python
 WD=$(shell pwd)
-PYTHONPATH=${WD}/python/lambda1
+PYTHONPATH=${WD}/python/lambda1:${WD}/python/lambda2:${WD}/python/lambda3
 SHELL := /bin/bash
 PROFILE = default
 PIP:=pip
