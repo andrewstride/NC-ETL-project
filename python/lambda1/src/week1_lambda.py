@@ -23,14 +23,15 @@ logger.setLevel("INFO")
 def lambda_handler(event, context):
     try:
         conn = db_connection()
+        table_names = get_tables(conn)
         s3 = boto3.client("s3")
-        for table in get_tables(conn):
+        for table in table_names:
             timestamp_from_s3 = read_timestamp_from_s3(s3, table)
             if timestamp_from_s3 == {"detail": "No timestamp exists"}:
-                rows = get_all_rows(conn, table)
+                rows = get_all_rows(conn, table, table_names)
             else:
-                rows = get_new_rows(conn, table, timestamp_from_s3[table])
-            columns = get_columns(conn, table)
+                rows = get_new_rows(conn, table, timestamp_from_s3[table], table_names)
+            columns = get_columns(conn, table, table_names)
 
             if rows != []:
                 df = table_to_dataframe(rows, columns)
@@ -45,3 +46,7 @@ def lambda_handler(event, context):
     except Exception as e:
         logging.error(e)
         return {"response": 500, "error": e}
+
+    finally:
+        if conn:
+            conn.close()

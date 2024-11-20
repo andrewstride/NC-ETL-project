@@ -21,18 +21,19 @@ def get_tables(conn):
     return tables_list
 
 
-def get_all_rows(conn, table):
+def get_all_rows(conn, table, table_list):
     """Returns rows from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
+        Table list (list) to check if valid
 
 
     Returns:
         List (list): The lists are rows from table
     """
-    if table in get_tables(conn):
+    if table in table_list:
         data = conn.run(f"SELECT * FROM {identifier(table)};")
         logging.info(f"All rows from {table} collected")
         return data
@@ -41,18 +42,19 @@ def get_all_rows(conn, table):
         return ["Table not found"]
 
 
-def get_columns(conn, table):
+def get_columns(conn, table, table_list):
     """Returns columns from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
+        Table list (list) to check if valid
 
 
     Returns:
         List (list): A list of columns
     """
-    if table in get_tables(conn):
+    if table in table_list:
         conn.run(f"SELECT * FROM {identifier(table)};")
         columns = [col["name"] for col in conn.columns]
         logging.info(f"Columns from {table} collected")
@@ -102,26 +104,34 @@ def read_timestamp_from_s3(s3, table):
         logging.info(f"read {timestamp} from s3")
         return timestamp
     except Exception as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
-            logging.info(f"Timestamp for {table} not found")
+        if (
+            e.response["Error"]["Code"] == "NoSuchKey"
+            or e.response["Error"]["Code"] == "AccessDenied"
+        ):
+            logging.info(
+                f"Response whilst collecting timestamp: {e}. Will create new file"
+            )
             return {"detail": "No timestamp exists"}
-        logging.error(f"Error collecting timestamp {e}")
-        return {"detail": "No timestamp exists"}
+        logging.error(
+            f"Unexpected error whilst collecting timestamp: {e}. Will create new file"
+        )
+        return e
 
 
-def get_new_rows(conn, table, timestamp):
+def get_new_rows(conn, table, timestamp, table_list):
     """Returns rows from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
         Timestamp (str): format 'YYYY-MM-DD HH24:MI:SS.US'
+        Table list (list) to check if valid
 
     Returns:
         List (list): The lists are rows from table
     """
     try:
-        if table in get_tables(conn):
+        if table in table_list:
             data = conn.run(
                 f"""SELECT * FROM {identifier(table)}
                             WHERE last_updated > to_timestamp(:timestamp,
