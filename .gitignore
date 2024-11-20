@@ -1,6 +1,7 @@
 #environment
 venv/
 .env
+**/.vscode/**
 
 #python and pytest
 **/*pycache
