@@ -14,7 +14,7 @@ import boto3
 #   quarter 
 
 start = '2022-01-01'
-end = '2025-12-31'
+end = '2050-12-31'
 
 def dim_date_table(start, end):
 
@@ -50,6 +50,6 @@ def dim_date_table(start, end):
     df["month_name"] = df.Date.dt.month.map(month_names.get)
     df["quarter"] = df.Date.dt.quarter
     df["year_half"] = (df.quarter + 1) // 2
-    return print(df.tail())
+    return print(df.head())
 
 dim_date_table(start, end)
