@@ -24,7 +24,8 @@ def dim_staff(s3):
             Key="department_timestamp.json"
         )
         """
-        
+        collecting the latest tiem stamp and decoding the staff and department tables.
+        The collected data is in string fromat
         """
         latest_timestamp = json.loads(latest_timestamp_json["Body"].read().decode("utf-8"))["staff"]
         latest_department_timestamp = json.loads(latest_timestamp_department_json["Body"].read().decode("utf-8"))["department"]
@@ -38,30 +39,25 @@ def dim_staff(s3):
             Bucket=ingestion_bucket,
             Key=f"department/department_{latest_department_timestamp}.csv"
         )["Body"].read().decode("utf-8")
+
         """
-        
+        using StringIO convering the string data in to dataframe
         """
         df_staff = pd.read_csv(StringIO(latest_data))
         df_department = pd.read_csv(StringIO(department_data))
-
-        staff_department = pd.concat([df_staff, df_department])
-        staff_department_str = str(staff_department)
-        df["Hello"] = staff_department_str[["department_id", "department_name"]].agg("-"join(), axis=1)
-        return df["Hello"]
-
-
-    
-
-        # star_schema_df = staff_department[[
-        #     "staff_id",
-        #     "first_name",
-        #     "last_name",
-        #     "department_name",
-        #     "location",
-        #     "email_address"
-        # ]].copy()
-        # return star_schema_df
+        """
+        used .merge() to left join the two dataframes
+        """
+        staff_department = df_staff.merge(df_department, how="left", left_on='department_id', right_on='department_id')
+        star_schema_df = staff_department[[
+            "staff_id",
+            "first_name",
+            "last_name",
+            "department_name",
+            "location",
+            "email_address"
+        ]].copy()
+        return star_schema_df
     except Exception as e:
         logging.error(e)
         return {"result": "Failure"}
-print(dim_staff(s3))
