@@ -34,15 +34,63 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
   definition = <<EOF
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Lambda Invoke",
+  "StartAt": "Invoke Lambda1",
   "States": {
-    "Lambda Invoke": {
+    "Invoke Lambda1": {
       "Type": "Task",
       "Resource": "arn:aws:states:::lambda:invoke",
       "OutputPath": "$.Payload",
       "Parameters": {
         "Payload.$": "$",
         "FunctionName": "arn:aws:lambda:eu-west-2:796973515606:function:lambda1:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Invoke Lambda2"
+    },
+    "Invoke Lambda2": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:eu-west-2:796973515606:function:lambda2:$LATEST"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Invoke Lambda3"
+    },
+    "Invoke Lambda3": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "OutputPath": "$.Payload",
+      "Parameters": {
+        "Payload.$": "$",
+        "FunctionName": "arn:aws:lambda:eu-west-2:796973515606:function:lambda3:$LATEST"
       },
       "Retry": [
         {
@@ -65,9 +113,3 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
 }
 EOF  
 } ## Code from console. Parameterize Lambda1 ARN ? 
-## Add other parts
-
-
-## Permissions:
-## EventBridge -> StepFunction (Execution role?)
-## StepFunction -> Lambda1
