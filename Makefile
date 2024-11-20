@@ -6,6 +6,7 @@ PYTHONPATH=${WD}/python/lambda1:${WD}/python/lambda2:${WD}/python/lambda3
 SHELL := /bin/bash
 PROFILE = default
 PIP:=pip
+ZIP:=zip
 
 ## Create python interpreter environment.
 create-environment:
@@ -93,3 +94,19 @@ check-coverage:
 
 ## Run all checks
 run-checks: security-test run-black unit-test check-coverage
+
+## Install lambda layers
+layer-setup:
+	$(call execute_in_env, $(PIP) install -r requirements-lambda1.txt \
+					-t terraform-remote-deployment/lambda1-layer/python)
+	$(call execute_in_env, cd terraform-remote-deployment && \
+	$(ZIP) -r lambda1_layer.zip lambda1-layer/python)
+	$(call execute_in_env, $(PIP) install -r requirements-lambda2.txt \
+					-t terraform-remote-deployment/lambda2-layer/python)
+	$(call execute_in_env, cd terraform-remote-deployment && \
+	$(ZIP) -r lambda2_layer.zip lambda2-layer/python)
+	$(call execute_in_env, $(PIP) install -r requirements-lambda3.txt \
+					-t terraform-remote-deployment/lambda3-layer/python)
+	$(call execute_in_env, cd terraform-remote-deployment && \
+	$(ZIP) -r lambda3_layer.zip lambda3-layer/python)
+
