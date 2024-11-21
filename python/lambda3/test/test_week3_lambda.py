@@ -38,6 +38,7 @@ class TestGetParquet:
 
 
 class TestDataFrameToSQL:
-    # def test_df_to_sql_returns_int(self, conn_fixture):
-    #     assert df_to_sql() == 1
-    assert 1 == 1
+    def test_df_to_sql_returns_int(self, nc_terraformers_processing_s3, conn_fixture):
+        df = import_pq_to_df(nc_terraformers_processing_s3, "test_staff.parquet")
+        assert isinstance(df_to_sql(df, "dim_staff", conn_fixture), int)
+    
