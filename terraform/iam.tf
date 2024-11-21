@@ -98,7 +98,7 @@ data "aws_iam_policy_document" "state_machine_role_policy" {
       "lambda:InvokeFunction"
     ]
 
-    resources = ["arn:aws:lambda:eu-west-2:796973515606:function:lambda1:$LATEST"]
+    resources = ["arn:aws:lambda:eu-west-2:796973515606:function:lambda1:$LATEST", "arn:aws:lambda:eu-west-2:796973515606:function:lambda2:$LATEST", "arn:aws:lambda:eu-west-2:796973515606:function:lambda3:$LATEST"]
   }
 
 }
