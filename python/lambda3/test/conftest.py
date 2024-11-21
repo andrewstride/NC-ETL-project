@@ -2,6 +2,7 @@ import os
 import pytest
 import boto3
 import pandas as pd
+from pg8000.native import Connection
 from io import BytesIO
 from datetime import datetime
 from moto import mock_aws
@@ -82,4 +83,9 @@ def nc_terraformers_processing_s3(test_df):
 
 @pytest.fixture(scope="function")
 def conn_fixture():
-    return wh_connection()
+    conn = Connection(
+        database="test-warehouse"
+        host="localhost",
+        port=5432,
+    )
+    return conn
