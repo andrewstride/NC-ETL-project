@@ -15,8 +15,8 @@ jobs:
     env:
       PGHOST: localhost
       PGDATABASE: test_warehouse
-      PGUSERNAME: testuser
-      PGPASSWORD: testuser
+      PGUSERNAME: postgres
+      PGPASSWORD: postgres
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -56,10 +56,10 @@ jobs:
           python-version: '3.x'
 
       - name: Feed data to dummy database
-        run: psql -d test_warehouse testuser -f generate_test_db.sql
+        run: psql -d test_warehouse postgres -f generate_test_db.sql
 
       - name: Check dummy database
-        run: psql -d test_warehouse testuser -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
+        run: psql -d test_warehouse postgres -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
         
       - name: Create Environment
         run: make create-environment
