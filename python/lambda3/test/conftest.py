@@ -6,7 +6,7 @@ from pg8000.native import Connection
 from io import BytesIO
 from datetime import datetime
 from moto import mock_aws
-from src.connection import wh_connection
+from src.lambda3_connection import wh_connection
 
 
 @pytest.fixture(scope="function")

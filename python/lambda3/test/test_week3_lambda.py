@@ -1,5 +1,5 @@
 from src.week3_lambda import lambda_handler
-from src.utils import import_pq_to_df, df_to_sql
+from src.lambda3_utils import import_pq_to_df, df_to_sql
 from testfixtures import LogCapture
 import pandas as pd
 
