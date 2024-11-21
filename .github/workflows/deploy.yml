@@ -12,47 +12,86 @@ jobs:
 
   deploy_project:
     runs-on: ubuntu-latest
+    env:
+      PGHOST: localhost
+      PGDATABASE: test_warehouse
+      PGUSERNAME: postgres
+      PGPASSWORD: postgres
     steps:
-    
-    - name: Checkout code
-      uses: actions/checkout@v3
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Create Environment
-      run: make create-environment
+      - name: Add PostgreSQL binaries to PATH
+        shell: bash
+        run: echo "$(pg_config --bindir)" >> $GITHUB_PATH
+   
+      - name: Start preinstalled PostgreSQL
+        shell: bash
+        run: |
+          echo "Initializing database cluster..."
+
+          # Convert backslashes to forward slashes in RUNNER_TEMP for Windows Git Bash
+          export PGHOST="${RUNNER_TEMP//\\//}/postgres"
+          export PGDATA="$PGHOST/pgdata"
+          mkdir -p "$PGDATA"
+
+          # initdb requires file for password in non-interactive mode
+          export PWFILE="$RUNNER_TEMP/pwfile"
+          echo "postgres" > $PWFILE
+          initdb --pgdata="$PGDATA" --username="postgres" --pwfile="$PWFILE"
+
+          echo "Starting PostgreSQL..."
+          echo "unix_socket_directories = '$PGHOST'" >> "$PGDATA/postgresql.conf"
+          pg_ctl start
+
+          echo "Creating user..."
+          psql --host "$PGHOST" --username="postgres" --dbname="postgres" --command="CREATE USER $PGUSERNAME PASSWORD '$PGPASSWORD'" --command="\du"
+
+          echo "Creating database..."
+          createdb --owner="$PGUSERNAME" --username="postgres" "$PGDATABASE"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Feed data to dummy database
+        run: psql -d test_warehouse postgres -f generate_test_db.sql
+
+      - name: Check dummy database
+        run: psql -d test_warehouse postgres -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
         
-    - name: Install requirements
-      run: make requirements
+      - name: Create Environment
+        run: make create-environment
+          
+      - name: Install requirements
+        run: make requirements
 
-    - name: Dev setup
-      run: make dev-setup
+      - name: Dev setup
+        run: make dev-setup
 
-    - name: Run security check (bandit, pip-audit)
-      run: make security-test
+      - name: Run security check (bandit, pip-audit)
+        run: make security-test
 
-    - name: Configure AWS Credentials for PyTest to connect to Totesys
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-             
-    - name: Run checks
-      run: make run-checks
+      - name: Configure AWS Credentials for PyTest to connect to Totesys
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+              
+      - name: Run checks
+        run: make run-checks
 
-    - name: Prepare Lambda layers
-      run: make layer-setup
-             
-    - name: Terraform Init
-      working-directory: terraform
-      run: terraform init
-    - name: Terraform Plan    
-      working-directory: terraform
-      run: terraform plan
-    - name: Terraform Apply
-      working-directory: terraform
-      run: terraform apply -auto-approve
+      - name: Prepare Lambda layers
+        run: make layer-setup
+              
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+      - name: Terraform Plan    
+        working-directory: terraform
+        run: terraform plan
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve
