@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-        
+
       - name: Add PostgreSQL binaries to PATH
         shell: bash
         run: echo "$(pg_config --bindir)" >> $GITHUB_PATH
@@ -50,47 +50,45 @@ jobs:
           echo "Creating database..."
           createdb --owner="$PGUSERNAME" --username="postgres" "$PGDATABASE"
 
-    
-      
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-    - name: Check dummy database
-      run: psql -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
-      
-    - name: Create Environment
-      run: make create-environment
+      - name: Check dummy database
+        run: psql -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
         
-    - name: Install requirements
-      run: make requirements
+      - name: Create Environment
+        run: make create-environment
+          
+      - name: Install requirements
+        run: make requirements
 
-    - name: Dev setup
-      run: make dev-setup
+      - name: Dev setup
+        run: make dev-setup
 
-    - name: Run security check (bandit, pip-audit)
-      run: make security-test
+      - name: Run security check (bandit, pip-audit)
+        run: make security-test
 
-    - name: Configure AWS Credentials for PyTest to connect to Totesys
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_KEY }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
-             
-    - name: Run checks
-      run: make run-checks
+      - name: Configure AWS Credentials for PyTest to connect to Totesys
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+              
+      - name: Run checks
+        run: make run-checks
 
-    - name: Prepare Lambda layers
-      run: make layer-setup
-             
-    - name: Terraform Init
-      working-directory: terraform
-      run: terraform init
-    - name: Terraform Plan    
-      working-directory: terraform
-      run: terraform plan
-    - name: Terraform Apply
-      working-directory: terraform
-      run: terraform apply -auto-approve
+      - name: Prepare Lambda layers
+        run: make layer-setup
+              
+      - name: Terraform Init
+        working-directory: terraform
+        run: terraform init
+      - name: Terraform Plan    
+        working-directory: terraform
+        run: terraform plan
+      - name: Terraform Apply
+        working-directory: terraform
+        run: terraform apply -auto-approve
