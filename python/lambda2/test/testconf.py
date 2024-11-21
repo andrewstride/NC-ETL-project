@@ -64,3 +64,15 @@ def test_parquet():
     out_buffer = BytesIO()
     input_df.to_parquet(out_buffer, index=False)
     yield out_buffer
+
+@pytest.fixture(scope="function")
+def test_df1():
+    data = [['a1', 'b1'], ['a2', 'b2'], ['a3', 'b3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
+
+@pytest.fixture(scope="function")
+def test_df2():
+    data = [['h1', 'j1'], ['h2', 'j2'], ['h3', 'j3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
