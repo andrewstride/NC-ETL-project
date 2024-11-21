@@ -1,9 +1,8 @@
 import logging
 import pandas as pd
-import json
 from io import BytesIO
 
-def get_parquet(s3, filename):
+def import_pq_to_df(s3, filename):
     '''
     Gets Parquet file from s3 bucket and returns as Pandas Dataframe
     
@@ -25,3 +24,17 @@ def get_parquet(s3, filename):
     except Exception as e:
         logging.error(e)
         return {"result": "failure"}
+
+def df_to_sql(df, table_name, conn):
+    '''
+    Exports DataFrame into Data Warehouse table
+
+    Parameters:
+    df: Pandas DataFrame
+    table_name (str): name of table to export to
+    conn: PG8000 connection
+    
+    Returns:
+    Number (int) of rows affected'''
+    pass
+    
