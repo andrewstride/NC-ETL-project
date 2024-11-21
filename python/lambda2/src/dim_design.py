@@ -1,44 +1,29 @@
-from datetime import datetime
-import json
 import pandas as pd
-from io import BytesIO, StringIO
 import logging
 
 
-def dim_design(s3):
-    try:
-        timestamp = datetime.now()
-        ingestion_bucket = "nc-terraformers-ingestion"
-        processing_bucket = "nc-terraformers-processing"
+def dim_design(old_df):
+    """Takes a DataFrame in design table format
+    and converts it to star_schema/dim_design format
 
-        # design_files = s3.list_objects_v2(Bucket=ingestion_bucket,
-        #                               Prefix="design/").get("Contents")
-        # latest_file = max([file["Key"] for file in design_files])
+    Paramaters:
+        old_df: a pandas DataFrame
 
-        latest_timestamp_json = s3.get_object(
-            Bucket=ingestion_bucket,
-            Key="design_timestamp.json")
-        latest_timestamp = json.loads(latest_timestamp_json[
-            "Body"].read().decode("utf-8"))["design"]
-        latest_data = s3.get_object(
-            Bucket=ingestion_bucket,
-            Key=f"design/design_{latest_timestamp}.csv"
-        )["Body"].read().decode("utf-8")
-
-        pre_star_schema_df = pd.read_csv(StringIO(latest_data))
-        star_schema_df = pre_star_schema_df[[
-            "design_id",
-            "design_name",
-            "file_location",
-            "file_name"]].copy()
-
-        out_buffer = BytesIO()
-        star_schema_df.to_parquet(out_buffer, index=False)
-        s3.put_object(
-            Bucket=processing_bucket,
-            Body=out_buffer.getvalue(),
-            Key=f"dim_design/dim_design_{timestamp}.parquet")
-        return {"result": "Success"}
-    except Exception as e:
-        logging.error(e)
-        return {"result": "Failure"}
+    Returns:
+        DataFrame: in dim_design format, if successful
+        OR
+        Dict (dict): {"result": "Failure"}, if unsuccessful
+    """
+    if isinstance(old_df, pd.DataFrame):
+        try:
+            new_df = old_df[[
+                "design_id",
+                "design_name",
+                "file_location",
+                "file_name"]].copy()
+            return new_df
+        except Exception as e:
+            logging.error(e)
+    else:
+        logging.error("Given paramater should be a DataFrame.")
+    return {"result": "Failure"}

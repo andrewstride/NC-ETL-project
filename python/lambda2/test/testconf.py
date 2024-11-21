@@ -2,6 +2,8 @@ from moto import mock_aws
 import boto3
 import pytest
 import os
+import pandas as pd
+from io import BytesIO
 
 @pytest.fixture(scope="function")
 def aws_cred():
@@ -54,3 +56,11 @@ def ingestion_bucket():
              "nc-terraformers-ingestion",
              "staff/staff_2024-11-18 19_15_01.821957.csv")
         yield s3
+
+@pytest.fixture(scope="function")
+def test_parquet():
+    data = [['a1', 'b1'], ['a2', 'b2'], ['a3', 'b3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    out_buffer = BytesIO()
+    input_df.to_parquet(out_buffer, index=False)
+    yield out_buffer
