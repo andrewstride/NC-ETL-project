@@ -1,5 +1,14 @@
+import json
+import boto3
+import pytest
+import pandas as pd
+from testfixtures import LogCapture
+from moto import mock_aws
+from unittest.mock import patch
+from datetime import datetime
 from src.week1_lambda import lambda_handler
-from src.utils import (
+from src.lambda1_connection import db_connection, get_db_creds
+from src.lambda1_utils import (
     get_all_rows,
     get_columns,
     write_to_s3,
@@ -11,16 +20,6 @@ from src.utils import (
     timestamp_from_df,
     write_timestamp_to_s3,
 )
-from src.connection import db_connection, get_db_creds
-from testfixtures import LogCapture
-from moto import mock_aws
-from unittest.mock import patch
-from testconf import aws_cred, empty_nc_terraformers_ingestion_s3, conn_fixture
-import json
-import boto3
-import pytest
-import pandas as pd
-from datetime import datetime
 
 
 @pytest.fixture(scope="function")

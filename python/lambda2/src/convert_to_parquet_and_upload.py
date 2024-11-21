@@ -35,15 +35,23 @@ def upload_to_processing_bucket(s3, parq_buffer, table_name):
     Returns:
         Dict (dict): {"result": "Failure/Success"}
     """
-    tables = ["dim_date", "dim_staff", "dim_counterparty", "dim_currency",
-              "dim_design", "dim_location", "fact_sales_order"]
+    tables = [
+        "dim_date",
+        "dim_staff",
+        "dim_counterparty",
+        "dim_currency",
+        "dim_design",
+        "dim_location",
+        "fact_sales_order",
+    ]
     if table_name in tables:
         try:
             timestamp = datetime.now()
             s3.put_object(
-                    Bucket="nc-terraformers-processing",
-                    Body=parq_buffer.getvalue(),
-                    Key=f"{table_name}/{table_name}_{timestamp}.parquet")
+                Bucket="nc-terraformers-processing",
+                Body=parq_buffer.getvalue(),
+                Key=f"{table_name}/{table_name}_{timestamp}.parquet",
+            )
             return {"result": "Success"}
         except Exception as e:
             logging.error(e)

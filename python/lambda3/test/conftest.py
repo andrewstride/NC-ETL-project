@@ -60,6 +60,7 @@ def test_df():
     ]
     return pd.DataFrame(rows, columns=cols)
 
+
 @pytest.fixture(scope="function")
 def nc_terraformers_processing_s3(test_df):
     out_buffer = BytesIO()
@@ -72,20 +73,15 @@ def nc_terraformers_processing_s3(test_df):
             Bucket=test_bucket,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
-        s3.put_object(
-            Bucket=test_bucket,
-            Body=test_parq,
-            Key="test_staff.parquet")
+        s3.put_object(Bucket=test_bucket, Body=test_parq, Key="test_staff.parquet")
         yield s3
-
-
 
 
 @pytest.fixture(scope="function")
 def conn_fixture():
     conn = Connection(
-        "testuser",
-        password="testuser",
+        "postgres",
+        password="postgres",
         database="test-warehouse",
         host="localhost",
         port=5432,

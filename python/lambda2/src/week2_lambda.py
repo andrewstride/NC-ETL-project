@@ -1,4 +1,4 @@
-#placeholder for Lambda2
+# placeholder for Lambda2
 def lambda_handler(event, context):
     speech = "Hello World!"
     print(speech)
