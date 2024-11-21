@@ -55,6 +55,9 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Feed data to dummy database
+        run: psql -d test_warehouse testuser -f generate_test_db.sql
+
       - name: Check dummy database
         run: psql -d test_warehouse testuser -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
         
