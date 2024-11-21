@@ -13,9 +13,7 @@ jobs:
   deploy_project:
     runs-on: ubuntu-latest
     steps:
-    - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)/python/lambda1:$(pwd)/python/lambda1/src:$(pwd)/python/lambda2:$(pwd)/python/lambda2/src:$(pwd)/python/lambda3:$(pwd)/python/lambda3/src" >> "$GITHUB_ENV"
-      
+    
     - name: Checkout code
       uses: actions/checkout@v3
       
@@ -24,26 +22,17 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 bandit
-        pip install pytest
-        pip install -r requirements.txt
+    - name: Create Environment
+      run: make create-environment
         
-    - name: PipAudit
-      uses: pypa/gh-action-pip-audit@v1.1.0
-      with:
-        inputs: requirements.txt requirements-lambda1.txt requirements-lambda2.txt requirements-lambda3.txt
-    
-    - name: Run PEP 8 compliance check (flake8)
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=79 --statistics
+    - name: Install requirements
+      run: make requirements
 
-    - name: Run security check (bandit)
-      run: |
-        bandit . -s B108
+    - name: Dev setup
+      run: make dev-setup
+
+    - name: Run security check (bandit, pip-audit)
+      run: make security-test
 
     - name: Configure AWS Credentials for PyTest to connect to Totesys
       uses: aws-actions/configure-aws-credentials@v1
@@ -52,34 +41,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
              
-    - name: Test with pytest
-      run: |
-          echo $PYTHONPATH
-          pytest
+    - name: Run checks
+      run: make run-checks
 
-    - name: install lambda1_layer requirements
-      run: pip install -r requirements-lambda1.txt -t terraform-remote-deployment/lambda1-layer/python
-    - name: zip lambda1_layer
-      working-directory: terraform-remote-deployment
-      run: | 
-          rm -f lambda1_layer.zip  
-          zip -r lambda1_layer.zip lambda1-layer
-
-    - name: install lambda2_layer requirements
-      run: pip install -r requirements-lambda2.txt -t terraform-remote-deployment/lambda2-layer/python
-    - name: zip lambda2_layer
-      working-directory: terraform-remote-deployment
-      run: | 
-          rm -f lambda2_layer.zip  
-          zip -r lambda2_layer.zip lambda2-layer  
-          
-    - name: install lambda3_layer requirements
-      run: pip install -r requirements-lambda3.txt -t terraform-remote-deployment/lambda3-layer/python
-    - name: zip lambda3_layer
-      working-directory: terraform-remote-deployment
-      run: | 
-          rm -f lambda3_layer.zip  
-          zip -r lambda3_layer.zip lambda3-layer  
+    - name: Prepare Lambda layers
+      run: make layer-setup
              
     - name: Terraform Init
       working-directory: terraform
