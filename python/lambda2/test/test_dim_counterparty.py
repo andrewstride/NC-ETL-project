@@ -1,8 +1,21 @@
 from src.dim_counterparty import dim_counterparty
-from testconf import test_df1, test_df2
 import pandas as pd
 import pytest
 from testfixtures import LogCapture
+
+
+@pytest.fixture(scope="function")
+def test_df1():
+    data = [['a1', 'b1'], ['a2', 'b2'], ['a3', 'b3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
+
+
+@pytest.fixture(scope="function")
+def test_df2():
+    data = [['h1', 'j1'], ['h2', 'j2'], ['h3', 'j3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
 
 
 @pytest.fixture(scope="function")
@@ -94,3 +107,11 @@ class TestDimCounterparty:
             assert output == {"result": "Failure"}
             assert "ERROR" in str(log)
             assert "Given paramater should be a DataFrame." in str(log)
+
+    def test_function_handles_dfs_with_invalid_columns_error(self,
+                                                             test_df1,
+                                                             test_df2):
+        with LogCapture() as log:
+            output = dim_counterparty(test_df1, test_df2)
+            assert output == {"result": "Failure"}
+            assert "ERROR" in str(log)
