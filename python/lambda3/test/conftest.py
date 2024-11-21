@@ -18,7 +18,7 @@ def aws_cred():
 
 
 @pytest.fixture(scope="function")
-def nc_terraformers_processing_s3():
+def test_df():
     rows = [
         [
             1,
@@ -57,7 +57,10 @@ def nc_terraformers_processing_s3():
         "created_at",
         "last_updated",
     ]
-    test_df = pd.DataFrame(rows, columns=cols)
+    return pd.DataFrame(rows, columns=cols)
+
+@pytest.fixture(scope="function")
+def nc_terraformers_processing_s3(test_df):
     out_buffer = BytesIO()
     test_df.to_parquet(out_buffer, index=False)
     test_parq = out_buffer.getvalue()

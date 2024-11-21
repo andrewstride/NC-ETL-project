@@ -17,8 +17,11 @@ def get_parquet(s3, filename):
         logging.info(f"Reading {filename} from nc-terraformers-processing bucket")
         response = s3.get_object(Bucket="nc-terraformers-processing", Key=filename)
         body = response["Body"]
-        df = pd.read_parquet(BytesIO(body))
+        pq = body.read()
+        df = pd.read_parquet(BytesIO(pq))
+        logging.info(f"{filename} file successfully imported into DataFrame")
         return df
 
     except Exception as e:
         logging.error(e)
+        return {"result": "failure"}
