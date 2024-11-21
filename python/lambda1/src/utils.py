@@ -17,45 +17,50 @@ def get_tables(conn):
              AND table_type='BASE TABLE';"""
     )
     tables_list = [item[0] for item in data if item[0] != "_prisma_migrations"]
+    logging.info("Table names collected from DB")
     return tables_list
 
 
-def get_all_rows(conn, table):
+def get_all_rows(conn, table, table_list):
     """Returns rows from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
+        Table list (list) to check if valid
 
 
     Returns:
         List (list): The lists are rows from table
     """
-    if table in get_tables(conn):
+    if table in table_list:
         data = conn.run(f"SELECT * FROM {identifier(table)};")
+        logging.info(f"All rows from {table} collected")
         return data
     else:
-        logging.error("Table not found")
+        logging.error(f"Table {table} not found")
         return ["Table not found"]
 
 
-def get_columns(conn, table):
+def get_columns(conn, table, table_list):
     """Returns columns from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
+        Table list (list) to check if valid
 
 
     Returns:
         List (list): A list of columns
     """
-    if table in get_tables(conn):
+    if table in table_list:
         conn.run(f"SELECT * FROM {identifier(table)};")
         columns = [col["name"] for col in conn.columns]
+        logging.info(f"Columns from {table} collected")
         return columns
     else:
-        logging.error("Table not found")
+        logging.error(f"Table {table} not found")
         return ["Table not found"]
 
 
@@ -74,6 +79,7 @@ def write_to_s3(s3, bucket_name, filename, format, data):
     """
     try:
         s3.put_object(Bucket=bucket_name, Key=f"{filename}.{format}", Body=data)
+        logging.info(f"{filename}.{format} written to s3")
     except (ClientError, ParamValidationError) as e:
         logging.error(e)
         return {"result": "Failure"}
@@ -94,33 +100,45 @@ def read_timestamp_from_s3(s3, table):
         filename = f"{table}_timestamp.json"
         response = s3.get_object(Bucket="nc-terraformers-ingestion", Key=filename)
         body = response["Body"]
-        return json.loads(body.read().decode())
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "NoSuchKey":
+        timestamp = json.loads(body.read().decode())
+        logging.info(f"read {timestamp} from s3")
+        return timestamp
+    except Exception as e:
+        if (
+            e.response["Error"]["Code"] == "NoSuchKey"
+            or e.response["Error"]["Code"] == "AccessDenied"
+        ):
+            logging.info(
+                f"Response whilst collecting timestamp: {e}. Will create new file"
+            )
             return {"detail": "No timestamp exists"}
-        logging.error(e)
-        return {"result": "Failure"}
+        logging.error(
+            f"Unexpected error whilst collecting timestamp: {e}. Will create new file"
+        )
+        return e
 
 
-def get_new_rows(conn, table, timestamp):
+def get_new_rows(conn, table, timestamp, table_list):
     """Returns rows from table
 
     Parameters:
         Connection: PG8000 Connection to database,
         Table (str): Table name to access in database
         Timestamp (str): format 'YYYY-MM-DD HH24:MI:SS.US'
+        Table list (list) to check if valid
 
     Returns:
         List (list): The lists are rows from table
     """
     try:
-        if table in get_tables(conn):
+        if table in table_list:
             data = conn.run(
                 f"""SELECT * FROM {identifier(table)}
                             WHERE last_updated > to_timestamp(:timestamp,
                             'YYYY-MM-DD HH24:MI:SS.US');""",
                 timestamp=timestamp,
             )
+            logging.info(f"{len(data)} rows collected from {table}")
             return data
         else:
             logging.error("Table not found")
@@ -133,20 +151,21 @@ def write_df_to_csv(s3, df, table_name):
     """Takes rows, columns, and name of a table, converts it
     to csv file format, and uploads the file to s3 Ingestion bucket.
 
-    Paramaters:
+    Parameters:
         s3: Boto3.client('s3') connection
-        Rows (list of lists): the rows of the table
-        Columns (list): the columns of the table
+        Pandas DataFrame
         Table_name (str): the name of the table
 
     Returns:
         Dict (dict): {"result": "Failure/Success"} + "detail" if successful.
     """
-    timestamp = str(datetime.now())
     try:
+        timestamp = str(timestamp_from_df(df))
         with StringIO() as csv:
+            logging.info(f"converting {table_name} dataframe to csv")
             df.to_csv(csv, index=False)
             data = csv.getvalue()
+            logging.info(f"writing {table_name}_{timestamp}.csv")
             response = write_to_s3(
                 s3,
                 "nc-terraformers-ingestion",
@@ -155,6 +174,7 @@ def write_df_to_csv(s3, df, table_name):
                 data,
             )
             if response["result"] == "Success":
+                logging.info(f"{table_name}_{timestamp}.csv successfully written")
                 return {
                     "result": "Success",
                     "detail": "Converted to csv, uploaded to ingestion bucket",
@@ -165,21 +185,48 @@ def write_df_to_csv(s3, df, table_name):
 
 
 def table_to_dataframe(rows, columns):
+    """Converts rows and columns into Pandas Dataframe
+
+    Parameters:
+    Rows (list): List of lists containing values
+    Columns (list): List of strings
+
+    Returns:
+    Pandas Dataframe"""
     try:
+        logging.info("converting to dataframe")
         return pd.DataFrame(rows, columns=columns)
     except Exception as e:
-        logging.error(e)
+        logging.error(f"dataframe conversion unsuccessful: {e}")
 
 
 def timestamp_from_df(df):
+    """Gets most recent timestamp as Datetime object from DataFrame
+
+    Parameters: Pandas Dataframe
+
+    Returns: Datetime object"""
     try:
-        return df["last_updated"].max()
+        timestamp = df["last_updated"].max()
+        logging.info(f"{timestamp} collected from dataframe")
+        return timestamp
     except KeyError as e:
         logging.error({"column not found": e})
 
 
 def write_timestamp_to_s3(s3, df, table):
+    """
+    Writes timestamp to s3 as JSON dictionary file
+
+    Parameters:
+    s3: Boto3.client('s3') connection
+    Pandas Dataframe
+    Table (str): Table name to be used in filename
+
+    Returns:
+    Dict of {"result": "Success"/"Failure"}"""
     try:
+        logging.info(f"converting {table} timestamp to JSON")
         timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)

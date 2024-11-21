@@ -76,6 +76,11 @@ def test_staff_df():
     return pd.DataFrame(rows, columns=cols)
 
 
+@pytest.fixture(scope="function")
+def test_tables(conn_fixture):
+    return get_tables(conn_fixture)
+
+
 class TestGetDBCreds:
     def test_correct_keys_in_dict(self):
         creds = get_db_creds()
@@ -117,31 +122,31 @@ class TestGetTables:
 
 
 class TestGetRows:
-    def test_returns_list(self):
+    def test_returns_list(self, test_tables):
         conn = db_connection()
-        assert isinstance(get_all_rows(conn, "staff"), list)
+        assert isinstance(get_all_rows(conn, "staff", test_tables), list)
 
-    def test_contains_lists(self):
+    def test_contains_lists(self, test_tables):
         conn = db_connection()
-        result = get_all_rows(conn, "staff")
+        result = get_all_rows(conn, "staff", test_tables)
         for row in result:
             assert isinstance(row, list)
 
-    def test_correct_no_of_columns(self):
+    def test_correct_no_of_columns(self, test_tables):
         conn = db_connection()
-        result = get_all_rows(conn, "staff")
+        result = get_all_rows(conn, "staff", test_tables)
         for row in result:
             assert len(row) == 7
 
 
 class TestGetColumns:
-    def test_returns_list(self):
+    def test_returns_list(self, test_tables):
         conn = db_connection()
-        assert isinstance(get_columns(conn, "staff"), list)
+        assert isinstance(get_columns(conn, "staff", test_tables), list)
 
-    def test_correct_no_of_columns(self):
+    def test_correct_no_of_columns(self, test_tables):
         conn = db_connection()
-        result = get_columns(conn, "staff")
+        result = get_columns(conn, "staff", test_tables)
         assert len(result) == 7
 
 
@@ -233,57 +238,55 @@ class TestReadTimestampFromS3:
         table = "staff"
         with LogCapture() as l:
             output = read_timestamp_from_s3(s3, table)
-            assert output["result"] == "Failure"
-            assert """root ERROR
-  An error occurred (NoSuchBucket) when calling the GetObject operation: The specified bucket does not exist""" in str(
-                l
-            )
+            assert output.response["Error"]["Code"] == "NoSuchBucket"
+            assert "Unexpected error whilst collecting timestamp" in str(l)
+            assert "Will create new file" in str(l)
 
 
 class TestGetNewRows:
-    def test_returns_list_of_lists(self):
+    def test_returns_list_of_lists(self, test_tables):
         conn = db_connection()
-        output = get_new_rows(conn, "staff", "2013-11-14 10:19:09.990000")
+        output = get_new_rows(conn, "staff", "2013-11-14 10:19:09.990000", test_tables)
         assert isinstance(output, list)
         for item in output:
             assert isinstance(item, list)
 
-    def test_handles_incorrect_timestamp(self):
+    def test_handles_incorrect_timestamp(self, test_tables):
         conn = db_connection()
         with LogCapture() as l:
-            output = get_new_rows(conn, "staff", "incorrect timestamp")
+            output = get_new_rows(conn, "staff", "incorrect timestamp", test_tables)
             assert (
                 """{'S': 'ERROR', 'V': 'ERROR', 'C': '22007', 'M': 'invalid value "inco" for "YYYY"', 'D': 'Value must be an integer.', 'F': 'formatting.c', 'L': '2416', 'R': 'from_char_parse_int_len'}"""
                 in str(l)
             )
         assert output == []
 
-    def test_returns_data_after_timestamp(self):
+    def test_returns_data_after_timestamp(self, test_tables):
         timestamp = "2024-11-14 12:37:09.990000"
         conn = db_connection()
-        output = get_new_rows(conn, "sales_order", timestamp)
-        columns = get_columns(conn, "sales_order")
+        output = get_new_rows(conn, "sales_order", timestamp, test_tables)
+        columns = get_columns(conn, "sales_order", test_tables)
         df = pd.DataFrame(output, columns=columns)
         format_string = "%Y-%m-%d %H:%M:%S.%f"
         min_time = df["last_updated"].min().to_pydatetime()
         assert min_time >= datetime.strptime(timestamp, format_string)
         assert type(min_time) == type(datetime.strptime(timestamp, format_string))
 
-    def test_handles_invalid_table_name(self):
+    def test_handles_invalid_table_name(self, test_tables):
         conn = db_connection()
         table = "invalid"
         timestamp = "2024-11-14 12:37:09.990000"
         with LogCapture() as l:
-            output = get_new_rows(conn, table, timestamp)
+            output = get_new_rows(conn, table, timestamp, test_tables)
             assert output == []
             assert "root ERROR\n  Table not found" in str(l)
 
-    def test_handles_error(self):
+    def test_handles_error(self, test_tables):
         conn = db_connection()
         table = "staff"
         timestamp = "hello"
         with LogCapture() as l:
-            output = get_new_rows(conn, table, timestamp)
+            output = get_new_rows(conn, table, timestamp, test_tables)
             assert output == []
             assert "root ERROR" in str(l)
 
@@ -336,14 +339,26 @@ class TestWriteDfToCsv:
         with LogCapture() as l:
             output = write_df_to_csv(s3, test_df, test_name)
             assert output == {"result": "Failure"}
-            assert "'str' object has no attribute 'to_csv'" in str(l)
+            assert "string indices must be integers, not 'str'" in str(l)
+
+    def test_writes_last_updated_timestamp_from_df(
+        self, test_df, empty_nc_terraformers_ingestion_s3
+    ):
+        s3 = empty_nc_terraformers_ingestion_s3
+        last_updated_from_df = timestamp_from_df(test_df)
+        write_df_to_csv(s3, test_df, "test")
+        response = s3.list_objects_v2(Bucket="nc-terraformers-ingestion").get(
+            "Contents"
+        )
+        bucket_files = [file["Key"] for file in response]
+        assert f"test/test_{str(last_updated_from_df)}.csv" in bucket_files
 
 
 class TestTableToDataframe:
-    def test_makes_data_frame_from_rows_and_columns(self):
+    def test_makes_data_frame_from_rows_and_columns(self, test_tables):
         conn = db_connection()
-        test_rows = get_all_rows(conn, "staff")
-        test_columns = get_columns(conn, "staff")
+        test_rows = get_all_rows(conn, "staff", test_tables)
+        test_columns = get_columns(conn, "staff", test_tables)
         output = table_to_dataframe(test_rows, test_columns)
         assert isinstance(output, pd.DataFrame)
 
@@ -400,11 +415,11 @@ class TestLambdaHandler:
     ):
         mock_db_connection.return_value = conn_fixture
         s3 = empty_nc_terraformers_ingestion_s3
+        db_tables = get_tables(conn_fixture)
         output = lambda_handler({}, {})
         assert output == {"response": 200}
         response = s3.list_objects(Bucket="nc-terraformers-ingestion")
         content_list = [item["Key"] for item in response["Contents"]]
-        db_tables = get_tables(conn_fixture)
         for table in db_tables:
             assert f"{table}_timestamp.json" in content_list
         assert len(content_list) == len(db_tables) * 2
