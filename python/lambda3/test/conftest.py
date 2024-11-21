@@ -82,7 +82,7 @@ def conn_fixture():
     conn = Connection(
         "postgres",
         password="postgres",
-        database="test-warehouse",
+        database="test_warehouse",
         host="localhost",
         port=5432,
     )
