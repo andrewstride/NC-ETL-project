@@ -322,6 +322,7 @@ class TestWriteDfToCsv:
         assert output == {
             "result": "Success",
             "detail": "Converted to csv, uploaded to ingestion bucket",
+            "key": f"staff/staff_{timestamp_from_df(test_staff_df)}.csv",
         }
         response = client.list_objects_v2(Bucket="nc-terraformers-ingestion").get(
             "Contents"
@@ -395,7 +396,7 @@ class TestWriteTimeStampToS3:
         response = s3.list_objects(Bucket="nc-terraformers-ingestion").get("Contents")
         bucket_files = [file["Key"] for file in response]
         assert "test_timestamp.json" in bucket_files
-        assert output == {"result": "Success"}
+        assert output == {"result": "Success", "key": "test_timestamp.json"}
 
     def test_handles_df_error(self, empty_nc_terraformers_ingestion_s3):
         s3 = empty_nc_terraformers_ingestion_s3
@@ -409,40 +410,24 @@ class TestWriteTimeStampToS3:
 class TestLambdaHandler:
     @mock_aws
     @patch("src.week1_lambda.db_connection")
-    def test_returns_200_response(
+    def test_returns_200_response_and_list_of_filenames(
         self, mock_db_connection, conn_fixture, empty_nc_terraformers_ingestion_s3
     ):
+        # Pass in DB connection
         mock_db_connection.return_value = conn_fixture
+        # Pass in mocked AWS S3 client
         s3 = empty_nc_terraformers_ingestion_s3
+        # Get Tables list
         db_tables = get_tables(conn_fixture)
+        # Assert Lambda returns 200 and filenames in dict
         output = lambda_handler({}, {})
-        assert output == {"response": 200}
+        assert output["response"] == 200
+        assert len(output["csv_files_written"]) == 11
+        assert len(output["timestamp_json_files_written"]) == 11
+        # List contents of mocked bucket
         response = s3.list_objects(Bucket="nc-terraformers-ingestion")
         content_list = [item["Key"] for item in response["Contents"]]
+        # Assert Timestamp JSON files written for each table
         for table in db_tables:
             assert f"{table}_timestamp.json" in content_list
         assert len(content_list) == len(db_tables) * 2
-
-
-# class TestGetTimestampFromDataFrame:
-#     def test_returns_timestamp(self):
-#         conn = db_connection()
-#         rows = get_all_rows(conn, "sales_order")
-#         columns = get_columns(conn, "sales_order")
-#         test_df = pd.DataFrame(rows, columns=columns)
-#         #print(test_df['last_updated'].max())
-#         test_df.head().to_json('test_table.json')
-
-# @pytest.mark.skip
-# class TestReadTimestampFromS3:
-
-#     @mock_aws
-#     def test_(self):
-#         table = "staff"
-#         s3 = boto3.client("s3")
-#         s3.create_bucket(Bucket="nc-terraformers-ingestion",
-#                          CreateBucketConfiguration={
-#                              "LocationConstraint": "eu-west-2"})
-#         output = read_timestamp_from_s3(s3, table)
-#         print(output)
-#         assert output == 1
