@@ -21,10 +21,22 @@ logger.setLevel("INFO")
 
 
 def lambda_handler(event, context):
+    """
+
+    Arguments:
+    Event and context not used by function
+
+    Returns:
+    {"response": 200,
+                "csv_files_written": csv_files_written (list),
+                "timestamp_json_files_written": timestamp_json_files_written (list)}
+    """
     try:
         conn = db_connection()
         table_names = get_tables(conn)
         s3 = boto3.client("s3")
+        csv_files_written = []
+        timestamp_json_files_written = []
         for table in table_names:
             timestamp_from_s3 = read_timestamp_from_s3(s3, table)
             if timestamp_from_s3 == {"detail": "No timestamp exists"}:
@@ -35,13 +47,19 @@ def lambda_handler(event, context):
 
             if rows != []:
                 df = table_to_dataframe(rows, columns)
-                write_df_to_csv(s3, df, table)
-                write_timestamp_to_s3(s3, df, table)
+                csv_key = write_df_to_csv(s3, df, table)["key"]
+                csv_files_written.append(csv_key)
+                json_key = write_timestamp_to_s3(s3, df, table)["key"]
+                timestamp_json_files_written.append(json_key)
             else:
                 logging.info(f"No new data in table {table} to upload.")
 
         logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
-        return {"response": 200}
+        return {
+            "response": 200,
+            "csv_files_written": csv_files_written,
+            "timestamp_json_files_written": timestamp_json_files_written,
+        }
 
     except Exception as e:
         logging.error(e)
