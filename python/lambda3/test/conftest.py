@@ -83,3 +83,8 @@ def conn_fixture():
         port=5432,
     )
     return conn
+
+@pytest.fixture(scope="function")
+def mock_event():
+    return {"response": 200,
+    "parquet_files_written": {"dim_staff": "test_staff.parquet"}}

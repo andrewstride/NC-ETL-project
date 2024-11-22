@@ -1,9 +1,10 @@
 import pandas as pd
-
+import pytest
+from unittest.mock import patch
 from src.week3_lambda import lambda_handler
 from src.lambda3_utils import import_pq_to_df, df_to_sql
 from testfixtures import LogCapture
-import pytest
+from moto import mock_aws
 
 @pytest.fixture(scope="function")
 def refresh_dim_staff(conn_fixture):
@@ -76,3 +77,38 @@ class TestDataFrameToSQL:
             output = df_to_sql(pd.DataFrame(), "dim_staff", conn_fixture)
             assert output == None
             assert "Malformed DataFrame: Empty DataFrame" in str(l)
+
+class TestLambda3:
+    @patch("src.week3_lambda.boto3")
+    @patch("src.week3_lambda.wh_connection")
+    def test_returns_200_for_import_parquet_from_mock_bucket_and_insert_into_test_db(self, mock_wh_connection, mock_boto3, nc_terraformers_processing_s3, conn_fixture, refresh_dim_staff, mock_event):
+        # patch in connection to Test Warehouse DB
+        mock_wh_connection.return_value = conn_fixture
+        # Patch in connection to Mock s3 Bucket (with parquet file on)
+        mock_boto3.client.return_value = nc_terraformers_processing_s3
+        # Run Lambda
+        response = lambda_handler(mock_event, {})
+        # Assert successful response
+        assert response["response"] == 200
+
+    @patch("src.week3_lambda.boto3")
+    @patch("src.week3_lambda.wh_connection")
+    def test_returns_200_for_import_parquet_from_mock_bucket_and_insert_into_test_db(self, mock_wh_connection, mock_boto3, nc_terraformers_processing_s3, conn_fixture, refresh_dim_staff, mock_event, test_dim_df):
+        # patch in connection to Test Warehouse DB
+        mock_wh_connection.return_value = conn_fixture
+        # Patch in connection to Mock s3 Bucket (with parquet file on)
+        mock_boto3.client.return_value = nc_terraformers_processing_s3
+        # Run Lambda
+        lambda_handler(mock_event, {})
+        # Assert data in Warehouse matches dataframe
+        dim_staff_rows = conn_fixture.run("SELECT * FROM dim_staff")
+        values = list(list(item) for item in test_dim_df.values)
+        assert values == dim_staff_rows
+        
+        
+
+
+    # event dict containing filenames and tablenames
+    # mock s3 connection
+    # bucket containing parquet files
+    # supply empty warehouse DB
