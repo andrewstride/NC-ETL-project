@@ -38,23 +38,7 @@ def df_to_sql(df, table_name, conn):
     conn: PG8000 connection
 
     Returns:
-    Number (int) of rows affected"""
-    
-
-    # values_dict_list = []
-    # for r in range(len(rows)):
-    #     row_dict = {}
-    #     for i in range(len(columns)):
-    #         row_dict[f"{columns[i]} {r}"] = rows[r][i]
-    #     values_dict_list.append(row_dict)
-    # print(values_dict_list)
-
-    # values_str = ''
-    # for value_dict in values_dict_list:
-    #     keys = list(value_dict.keys())
-    #     for key in keys:
-    #         key = f':{key}'
-    #     print(keys)
+    Number (int) of rows affected"""    
 
     columns = list(df.columns)
     columns_str = ', '.join(f"{identifier(column)}" for column in columns)
