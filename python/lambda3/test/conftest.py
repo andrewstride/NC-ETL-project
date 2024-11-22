@@ -69,8 +69,8 @@ def nc_terraformers_processing_s3(test_dim_df):
 @pytest.fixture(scope="function")
 def conn_fixture():
     conn = Connection(
-        "andrewstride",
-        password="",
+        "postgres",
+        password="postgres",
         database="test_warehouse",
         host="localhost",
         port=5432,
