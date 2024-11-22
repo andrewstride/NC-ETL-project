@@ -52,3 +52,27 @@ variable "lambda2_source_dir" {
     type = string
     default = "../python/lambda2"
 }
+
+## Name for lambda3
+variable "lambda3_name" {
+    type = string
+    default = "lambda3"
+}
+
+## Deployment directory for lambda3
+variable "lambda3_deployment_dir" {
+    type = string
+    default = "../terraform-remote-deployment/lambda3"
+}
+
+## Deployment directory for lambda3 layer
+variable "lambda3_layer_deployment_dir" {
+    type = string
+    default = "../terraform-remote-deployment/lambda3-layer"
+}
+
+## Source directory for lambda3
+variable "lambda3_source_dir" {
+    type = string
+    default = "../python/lambda3"
+}
