@@ -33,26 +33,26 @@ def ingestion_bucket():
             Bucket=test_bucket,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
-        s3.upload_file("test/design_timestamp.json",
+        s3.upload_file("python/lambda2/test/design_timestamp.json",
                                       "nc-terraformers-ingestion",
                                       "design_timestamp.json")
-        s3.upload_file("test/design_timestamp.json",
+        s3.upload_file("python/lambda2/test/design_timestamp.json",
                                       "nc-terraformers-ingestion",
                                       "staff_timestamp.json")
         s3.upload_file(
-            "test/design_2024-11-18 10_56_09.970000.csv",
+            "python/lambda2/test/design_2024-11-18 10_56_09.970000.csv",
              "nc-terraformers-ingestion",
              "design/design_2024-11-18 10:56:09.970000.csv")
         s3.upload_file(
-            "test/design_2024-11-18 16_47_28.291856.csv",
+            "python/lambda2/test/design_2024-11-18 16_47_28.291856.csv",
              "nc-terraformers-ingestion",
              "design/design_2024-11-18 16_47_28.291856.csv")
         s3.upload_file(
-            "test/design_2024-11-18 19_15_01.821957.csv",
+            "python/lambda2/test/design_2024-11-18 19_15_01.821957.csv",
              "nc-terraformers-ingestion",
              "design/design_2024-11-18 19_15_01.821957.csv")
         s3.upload_file(
-            "test/staff_2024-11-18 16_53_23.353536.csv",
+            "python/lambda2/test/staff_2024-11-18 16_53_23.353536.csv",
              "nc-terraformers-ingestion",
              "staff/staff_2024-11-18 19_15_01.821957.csv")
         yield s3
