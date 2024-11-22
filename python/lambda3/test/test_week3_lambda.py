@@ -3,6 +3,12 @@ import pandas as pd
 from src.week3_lambda import lambda_handler
 from src.lambda3_utils import import_pq_to_df, df_to_sql
 from testfixtures import LogCapture
+import pytest
+
+@pytest.fixture(scope="function")
+def reseed_db(conn_fixture):
+    with open("generate_test_db.sql", "r") as f:
+        conn_fixture.run()
 
 
 class TestGetParquet:
@@ -38,8 +44,20 @@ class TestGetParquet:
 
 
 class TestDataFrameToSQL:
-    def test_df_to_sql_returns_int(self, test_dim_df, conn_fixture):
+    def test_returns_int_of_inserted_rows(self, test_dim_df, conn_fixture):
+        conn_fixture.run("DELETE FROM dim_staff;")
+        output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+        assert output == 3
+
+    def test_df_data_written_to_db(self, test_dim_df, conn_fixture):
+        conn_fixture.run("DELETE FROM dim_staff;")
         output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
         dim_staff = conn_fixture.run("SELECT * FROM dim_staff")
         columns = [col['name'] for col in conn_fixture.columns]
-        assert output == 3
+        assert len(dim_staff) == output
+        assert columns == list(test_dim_df.columns)
+
+        
+
+    def test_logs_progress(self, test_dim_df, conn_fixture):
+        pass

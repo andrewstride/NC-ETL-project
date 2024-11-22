@@ -49,10 +49,11 @@ def df_to_sql(df, table_name, conn):
         row_str = ', '.join(values)
         values_list.append(f"({row_str})")
     values_str = ', '.join(values_list)
-    print(values_str)    
     query = f"""INSERT INTO {identifier(table_name)}
             ({columns_str})
             VALUES {values_str} 
             RETURNING *;"""
+    logging.info(f"Inserting values into {table_name}")
     result = conn.run(query)
+    logging.info(f"{len(result)} inserted into {table_name} successfully")
     return len(result)
