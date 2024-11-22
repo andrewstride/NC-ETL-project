@@ -1,9 +1,7 @@
-
 import boto3
 import pytest
 import os
 import pandas as pd
-
 from moto import mock_aws
 from io import BytesIO
 
@@ -16,6 +14,7 @@ def aws_cred():
     os.environ["AWS_SESSION_TOKEN"] = "test"
     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
+
 @pytest.fixture(scope="function")
 def processing_bucket():
     with mock_aws():
@@ -26,6 +25,7 @@ def processing_bucket():
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
         yield s3
+
 
 @pytest.fixture(scope="function")
 def ingestion_bucket():
@@ -77,3 +77,17 @@ def test_parquet():
     out_buffer = BytesIO()
     input_df.to_parquet(out_buffer, index=False)
     yield out_buffer
+
+
+@pytest.fixture(scope="function")
+def test_df1():
+    data = [['a1', 'b1'], ['a2', 'b2'], ['a3', 'b3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
+
+
+@pytest.fixture(scope="function")
+def test_df2():
+    data = [['h1', 'j1'], ['h2', 'j2'], ['h3', 'j3']]
+    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    yield input_df
