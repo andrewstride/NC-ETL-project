@@ -1,7 +1,12 @@
 import pandas as pd
 
 def dim_date(start='2000-01-01', end='2025-12-31'):
-    
+    """
+    function takes the start and end year time period
+    Parameters: Takes the date_is as a primary key
+    Returns: Returns respected query columns of the table
+
+    """    
     df = pd.DataFrame({"date_id" : pd.date_range(start, end)})
     df["year"] = df.date_id.dt.year
     df["month"] = df.date_id.dt.month
