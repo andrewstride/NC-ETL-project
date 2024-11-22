@@ -18,20 +18,25 @@ def get_latest_file_as_df(s3, table_name):
         Dict (dict): {"result": "Failure"} if unsuccessful
     """
     try:
-        ''' Get latest timestamp for table from timestamp JSON '''
+        """Get latest timestamp for table from timestamp JSON"""
         latest_timestamp_json = s3.get_object(
-            Bucket="nc-terraformers-ingestion",
-            Key=f"{table_name}_timestamp.json")
-        latest_timestamp = json.loads(latest_timestamp_json[
-            "Body"].read().decode("utf-8"))["design"]
+            Bucket="nc-terraformers-ingestion", Key=f"{table_name}_timestamp.json"
+        )
+        latest_timestamp = json.loads(
+            latest_timestamp_json["Body"].read().decode("utf-8")
+        )["design"]
 
-        ''' Get latest file of table '''
-        latest_data = s3.get_object(
-            Bucket="nc-terraformers-ingestion",
-            Key=f"{table_name}/{table_name}_{latest_timestamp}.csv"
-        )["Body"].read().decode("utf-8")
+        """ Get latest file of table """
+        latest_data = (
+            s3.get_object(
+                Bucket="nc-terraformers-ingestion",
+                Key=f"{table_name}/{table_name}_{latest_timestamp}.csv",
+            )["Body"]
+            .read()
+            .decode("utf-8")
+        )
 
-        ''' Return DataFrame of data from latest file '''
+        """ Return DataFrame of data from latest file """
         return pd.read_csv(StringIO(latest_data))
 
     except Exception as e:

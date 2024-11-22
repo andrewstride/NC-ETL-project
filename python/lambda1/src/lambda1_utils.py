@@ -178,6 +178,7 @@ def write_df_to_csv(s3, df, table_name):
                 return {
                     "result": "Success",
                     "detail": "Converted to csv, uploaded to ingestion bucket",
+                    "key": f"{table_name}/{table_name}_{timestamp}.csv",
                 }
     except Exception as e:
         logging.error(e)
@@ -230,7 +231,7 @@ def write_timestamp_to_s3(s3, df, table):
         timestamp_json = json.dumps({table: str(timestamp_from_df(df))})
         filename = f"{table}_timestamp"
         write_to_s3(s3, "nc-terraformers-ingestion", filename, "json", timestamp_json)
-        return {"result": "Success"}
+        return {"result": "Success", "key": f"{table}_timestamp.json"}
     except Exception as e:
         logging.error(e)
         return {"result": "Failure"}

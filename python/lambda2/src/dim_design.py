@@ -16,11 +16,9 @@ def dim_design(old_df):
     """
     if isinstance(old_df, pd.DataFrame):
         try:
-            new_df = old_df[[
-                "design_id",
-                "design_name",
-                "file_location",
-                "file_name"]].copy()
+            new_df = old_df[
+                ["design_id", "design_name", "file_location", "file_name"]
+            ].copy()
             return new_df
         except Exception as e:
             logging.error(e)
