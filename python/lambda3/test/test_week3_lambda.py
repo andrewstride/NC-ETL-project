@@ -6,10 +6,8 @@ from testfixtures import LogCapture
 import pytest
 
 @pytest.fixture(scope="function")
-def reseed_db(conn_fixture):
-    with open("generate_test_db.sql", "r") as f:
-        conn_fixture.run()
-
+def refresh_dim_staff(conn_fixture):
+    conn_fixture.run("DELETE FROM dim_staff;")
 
 class TestGetParquet:
     def test_returns_dataframe(self, nc_terraformers_processing_s3):
@@ -44,20 +42,37 @@ class TestGetParquet:
 
 
 class TestDataFrameToSQL:
-    def test_returns_int_of_inserted_rows(self, test_dim_df, conn_fixture):
-        conn_fixture.run("DELETE FROM dim_staff;")
+    def test_returns_int_of_inserted_rows(self, test_dim_df, conn_fixture, refresh_dim_staff):
         output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
         assert output == 3
 
-    def test_df_data_written_to_db(self, test_dim_df, conn_fixture):
-        conn_fixture.run("DELETE FROM dim_staff;")
+    def test_df_data_written_to_db(self, test_dim_df, conn_fixture, refresh_dim_staff):
         output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
         dim_staff = conn_fixture.run("SELECT * FROM dim_staff")
         columns = [col['name'] for col in conn_fixture.columns]
         assert len(dim_staff) == output
         assert columns == list(test_dim_df.columns)
 
-        
+    def test_logs_progress(self, test_dim_df, conn_fixture, refresh_dim_staff):
+        with LogCapture() as l:
+            df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+            assert "Inserting values into dim_staff" in str(l)
+            assert "3 rows inserted into dim_staff successfully" in str(l)
 
-    def test_logs_progress(self, test_dim_df, conn_fixture):
-        pass
+    def test_handles_table_name_error(self, test_dim_df, conn_fixture, refresh_dim_staff):
+        with LogCapture() as l:
+            output = df_to_sql(test_dim_df, "invalid_table", conn_fixture)
+            assert """relation "invalid_table" does not exist""" in str(l)
+            assert output == None
+
+    def test_handles_df_sql_columns_mismatch(self, test_dim_df, conn_fixture):
+        with LogCapture() as l:
+            output = df_to_sql(test_dim_df, "fact_sales_order", conn_fixture)
+            assert """'column "staff_id" of relation "fact_sales_order" does not exist""" in str(l)
+            assert output == None
+
+    def test_handles_empty_df(self, conn_fixture):
+        with LogCapture() as l:
+            output = df_to_sql(pd.DataFrame(), "dim_staff", conn_fixture)
+            assert output == None
+            assert "Malformed DataFrame: Empty DataFrame" in str(l)

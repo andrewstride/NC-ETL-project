@@ -33,8 +33,8 @@ def df_to_sql(df, table_name, conn):
     Exports DataFrame into Data Warehouse table
 
     Parameters:
-    df: Pandas DataFrame
-    table_name (str): name of table to export to
+    df: Pandas DataFrame,
+    table_name (str): name of table to export to,
     conn: PG8000 connection
 
     Returns:
@@ -43,6 +43,9 @@ def df_to_sql(df, table_name, conn):
     columns = list(df.columns)
     columns_str = ', '.join(f"{identifier(column)}" for column in columns)
     rows = list(df.values)
+    if len(columns) == 0 or len(rows) == 0:
+        logging.error(f"Malformed DataFrame: {df}")
+        return None
     values_list = []
     for row in rows:
         values = [literal(v) for v in row]
@@ -54,6 +57,9 @@ def df_to_sql(df, table_name, conn):
             VALUES {values_str} 
             RETURNING *;"""
     logging.info(f"Inserting values into {table_name}")
-    result = conn.run(query)
-    logging.info(f"{len(result)} inserted into {table_name} successfully")
-    return len(result)
+    try:
+        result = conn.run(query)
+        logging.info(f"{len(result)} rows inserted into {table_name} successfully")
+        return len(result)
+    except Exception as e:
+        logging.error(e)
