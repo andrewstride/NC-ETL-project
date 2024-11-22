@@ -19,52 +19,48 @@ def aws_cred():
 
 
 @pytest.fixture(scope="function")
-def test_df():
+def test_dim_df():
     rows = [
         [
             1,
             "Jeremie",
             "Franey",
-            2,
-            "jeremie.franey@terrifictotes.com",
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            "Sales",
+            "Manchester",
+            "jeremie.franey@terrifictotes.com"
         ],
         [
             2,
             "Deron",
             "Beier",
-            6,
-            "deron.beier@terrifictotes.com",
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            "Marketing",
+            "Leeds",
+            "deron.beier@terrifictotes.com"
         ],
         [
             3,
             "Jeanette",
             "Erdman",
-            6,
-            "jeanette.erdman@terrifictotes.com",
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
-            datetime(2022, 11, 3, 14, 20, 51, 563000),
+            "Finance",
+            "York",
+            "jeanette.erdman@terrifictotes.com"
         ],
     ]
     cols = [
         "staff_id",
         "first_name",
         "last_name",
-        "department_id",
+        "department_name",
+        "location",
         "email_address",
-        "created_at",
-        "last_updated",
     ]
     return pd.DataFrame(rows, columns=cols)
 
 
 @pytest.fixture(scope="function")
-def nc_terraformers_processing_s3(test_df):
+def nc_terraformers_processing_s3(test_dim_df):
     out_buffer = BytesIO()
-    test_df.to_parquet(out_buffer, index=False)
+    test_dim_df.to_parquet(out_buffer, index=False)
     test_parq = out_buffer.getvalue()
     with mock_aws():
         s3 = boto3.client("s3")
@@ -82,7 +78,7 @@ def conn_fixture():
     conn = Connection(
         "postgres",
         password="postgres",
-        database="test-warehouse",
+        database="test_warehouse",
         host="localhost",
         port=5432,
     )

@@ -42,6 +42,4 @@ class TestDataFrameToSQL:
         output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
         dim_staff = conn_fixture.run("SELECT * FROM dim_staff")
         columns = [col['name'] for col in conn_fixture.columns]
-        print(f"columns: {columns}")
-        print(f"resulting table: {dim_staff}")
         assert output == 3
