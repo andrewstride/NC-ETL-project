@@ -36,7 +36,7 @@ def ingestion_bucket():
             Bucket=test_bucket,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
-        
+
         s3.upload_file(
             "python/lambda2/test/design_timestamp.json",
             "nc-terraformers-ingestion",
@@ -81,13 +81,13 @@ def test_parquet():
 
 @pytest.fixture(scope="function")
 def test_df1():
-    data = [['a1', 'b1'], ['a2', 'b2'], ['a3', 'b3']]
-    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    data = [["a1", "b1"], ["a2", "b2"], ["a3", "b3"]]
+    input_df = pd.DataFrame(data, columns=["col1", "col2"])
     yield input_df
 
 
 @pytest.fixture(scope="function")
 def test_df2():
-    data = [['h1', 'j1'], ['h2', 'j2'], ['h3', 'j3']]
-    input_df = pd.DataFrame(data, columns=['col1', 'col2'])
+    data = [["h1", "j1"], ["h2", "j2"], ["h3", "j3"]]
+    input_df = pd.DataFrame(data, columns=["col1", "col2"])
     yield input_df
