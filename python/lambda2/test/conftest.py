@@ -1,7 +1,9 @@
+
 import boto3
 import pytest
 import os
 import pandas as pd
+
 from moto import mock_aws
 from io import BytesIO
 
@@ -14,7 +16,6 @@ def aws_cred():
     os.environ["AWS_SESSION_TOKEN"] = "test"
     os.environ["AWS_DEFAULT_REGION"] = "eu-west-2"
 
-
 @pytest.fixture(scope="function")
 def processing_bucket():
     with mock_aws():
@@ -26,7 +27,6 @@ def processing_bucket():
         )
         yield s3
 
-
 @pytest.fixture(scope="function")
 def ingestion_bucket():
     with mock_aws():
@@ -36,6 +36,7 @@ def ingestion_bucket():
             Bucket=test_bucket,
             CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
+        
         s3.upload_file(
             "python/lambda2/test/design_timestamp.json",
             "nc-terraformers-ingestion",
