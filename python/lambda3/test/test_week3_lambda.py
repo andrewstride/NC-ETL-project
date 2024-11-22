@@ -10,9 +10,9 @@ class TestGetParquet:
         output = import_pq_to_df(nc_terraformers_processing_s3, "test_staff.parquet")
         assert isinstance(output, pd.DataFrame)
 
-    def test_df_unchanged(self, nc_terraformers_processing_s3, test_df):
+    def test_df_unchanged(self, nc_terraformers_processing_s3, test_dim_df):
         output = import_pq_to_df(nc_terraformers_processing_s3, "test_staff.parquet")
-        assert output.equals(test_df)
+        assert output.equals(test_dim_df)
 
     def test_handles_no_such_key_error(self, nc_terraformers_processing_s3):
         with LogCapture() as l:
@@ -38,6 +38,10 @@ class TestGetParquet:
 
 
 class TestDataFrameToSQL:
-    # def test_df_to_sql_returns_int(self, conn_fixture):
-    #     assert df_to_sql() == 1
-    assert 1 == 1
+    def test_df_to_sql_returns_int(self, test_dim_df, conn_fixture):
+        output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+        dim_staff = conn_fixture.run("SELECT * FROM dim_staff")
+        columns = [col['name'] for col in conn_fixture.columns]
+        print(f"columns: {columns}")
+        print(f"resulting table: {dim_staff}")
+        assert output == 3
