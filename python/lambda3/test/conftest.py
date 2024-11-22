@@ -27,23 +27,16 @@ def test_dim_df():
             "Franey",
             "Sales",
             "Manchester",
-            "jeremie.franey@terrifictotes.com"
+            "jeremie.franey@terrifictotes.com",
         ],
-        [
-            2,
-            "Deron",
-            "Beier",
-            "Marketing",
-            "Leeds",
-            "deron.beier@terrifictotes.com"
-        ],
+        [2, "Deron", "Beier", "Marketing", "Leeds", "deron.beier@terrifictotes.com"],
         [
             3,
             "Jeanette",
             "Erdman",
             "Finance",
             "York",
-            "jeanette.erdman@terrifictotes.com"
+            "jeanette.erdman@terrifictotes.com",
         ],
     ]
     cols = [
@@ -76,15 +69,18 @@ def nc_terraformers_processing_s3(test_dim_df):
 @pytest.fixture(scope="function")
 def conn_fixture():
     conn = Connection(
-        "postgres",
-        password="postgres",
+        "andrewstride",
+        password="",
         database="test_warehouse",
         host="localhost",
         port=5432,
     )
     return conn
 
+
 @pytest.fixture(scope="function")
 def mock_event():
-    return {"response": 200,
-    "parquet_files_written": {"dim_staff": "test_staff.parquet"}}
+    return {
+        "response": 200,
+        "parquet_files_written": {"dim_staff": "test_staff.parquet"},
+    }
