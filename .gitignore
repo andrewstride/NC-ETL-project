@@ -1,7 +1,6 @@
 #environment
 venv/
 .env
-**/.vscode/**
 
 #python and pytest
 **/*pycache
@@ -21,6 +20,3 @@ terraform/init.sh
 terraform-remote-deployment/
 
 *.zip
-
-#ignore of temp code runner file.
-**/tempCodeRunnerFile.py
