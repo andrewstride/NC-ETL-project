@@ -1,8 +1,15 @@
 import pandas as pd
-
+import pytest
+from unittest.mock import patch
 from src.week3_lambda import lambda_handler
 from src.lambda3_utils import import_pq_to_df, df_to_sql
 from testfixtures import LogCapture
+from moto import mock_aws
+
+
+@pytest.fixture(scope="function")
+def refresh_dim_staff(conn_fixture):
+    conn_fixture.run("DELETE FROM dim_staff;")
 
 
 class TestGetParquet:
@@ -10,9 +17,9 @@ class TestGetParquet:
         output = import_pq_to_df(nc_terraformers_processing_s3, "test_staff.parquet")
         assert isinstance(output, pd.DataFrame)
 
-    def test_df_unchanged(self, nc_terraformers_processing_s3, test_df):
+    def test_df_unchanged(self, nc_terraformers_processing_s3, test_dim_df):
         output = import_pq_to_df(nc_terraformers_processing_s3, "test_staff.parquet")
-        assert output.equals(test_df)
+        assert output.equals(test_dim_df)
 
     def test_handles_no_such_key_error(self, nc_terraformers_processing_s3):
         with LogCapture() as l:
@@ -38,6 +45,94 @@ class TestGetParquet:
 
 
 class TestDataFrameToSQL:
-    # def test_df_to_sql_returns_int(self, conn_fixture):
-    #     assert df_to_sql() == 1
-    assert 1 == 1
+    def test_returns_int_of_inserted_rows(
+        self, test_dim_df, conn_fixture, refresh_dim_staff
+    ):
+        output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+        assert output == 3
+
+    def test_df_data_written_to_db(self, test_dim_df, conn_fixture, refresh_dim_staff):
+        output = df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+        dim_staff = conn_fixture.run("SELECT * FROM dim_staff")
+        columns = [col["name"] for col in conn_fixture.columns]
+        assert len(dim_staff) == output
+        assert columns == list(test_dim_df.columns)
+
+    def test_logs_progress(self, test_dim_df, conn_fixture, refresh_dim_staff):
+        with LogCapture() as l:
+            df_to_sql(test_dim_df, "dim_staff", conn_fixture)
+            assert "Inserting values into dim_staff" in str(l)
+            assert "3 rows inserted into dim_staff successfully" in str(l)
+
+    def test_handles_table_name_error(
+        self, test_dim_df, conn_fixture, refresh_dim_staff
+    ):
+        with LogCapture() as l:
+            output = df_to_sql(test_dim_df, "invalid_table", conn_fixture)
+            assert """relation "invalid_table" does not exist""" in str(l)
+            assert output == None
+
+    def test_handles_df_sql_columns_mismatch(self, test_dim_df, conn_fixture):
+        with LogCapture() as l:
+            output = df_to_sql(test_dim_df, "fact_sales_order", conn_fixture)
+            assert (
+                """'column "staff_id" of relation "fact_sales_order" does not exist"""
+                in str(l)
+            )
+            assert output == None
+
+    def test_handles_empty_df(self, conn_fixture):
+        with LogCapture() as l:
+            output = df_to_sql(pd.DataFrame(), "dim_staff", conn_fixture)
+            assert output == None
+            assert "Malformed DataFrame: Empty DataFrame" in str(l)
+
+
+class TestLambda3:
+    @patch("src.week3_lambda.boto3")
+    @patch("src.week3_lambda.wh_connection")
+    def test_returns_200(
+        self,
+        mock_wh_connection,
+        mock_boto3,
+        nc_terraformers_processing_s3,
+        conn_fixture,
+        refresh_dim_staff,
+        mock_event,
+    ):
+        # patch in connection to Test Warehouse DB
+        mock_wh_connection.return_value = conn_fixture
+        # Patch in connection to Mock s3 Bucket (with parquet file on)
+        mock_boto3.client.return_value = nc_terraformers_processing_s3
+        # Run Lambda
+        response = lambda_handler(mock_event, {})
+        # Assert successful response
+        assert response["response"] == 200
+
+    @patch("src.week3_lambda.boto3")
+    @patch("src.week3_lambda.wh_connection")
+    def test_data_inserted(
+        self,
+        mock_wh_connection,
+        mock_boto3,
+        nc_terraformers_processing_s3,
+        conn_fixture,
+        refresh_dim_staff,
+        mock_event,
+        test_dim_df,
+    ):
+        # patch in connection to Test Warehouse DB
+        mock_wh_connection.return_value = conn_fixture
+        # Patch in connection to Mock s3 Bucket (with parquet file on)
+        mock_boto3.client.return_value = nc_terraformers_processing_s3
+        # Run Lambda
+        lambda_handler(mock_event, {})
+        # Assert data in Warehouse matches dataframe
+        dim_staff_rows = conn_fixture.run("SELECT * FROM dim_staff")
+        values = list(list(item) for item in test_dim_df.values)
+        assert values == dim_staff_rows
+
+    # event dict containing filenames and tablenames
+    # mock s3 connection
+    # bucket containing parquet files
+    # supply empty warehouse DB

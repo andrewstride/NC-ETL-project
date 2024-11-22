@@ -17,12 +17,9 @@ def dim_currency(currency_df):
     """
     if isinstance(currency_df, pd.DataFrame):
         try:
-            new_df = currency_df[["currency_id",
-                                  "currency_code"]].copy()
+            new_df = currency_df[["currency_id", "currency_code"]].copy()
             currency_codes = new_df["currency_code"].to_list()
-            currency_names = [
-                Currency(code).currency_name for code in currency_codes
-            ]
+            currency_names = [Currency(code).currency_name for code in currency_codes]
             new_df["currency_name"] = currency_names
             return new_df
         except Exception as e:
