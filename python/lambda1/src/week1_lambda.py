@@ -24,11 +24,12 @@ def lambda_handler(event, context):
     """
 
     Arguments:
-    Event and context not used by function
+    Event: Any
+    Context: Any
 
     Returns:
     {"response": 200,
-                "csv_files_written": csv_files_written (list),
+                "csv_files_written": [{table_name : csv_file_written}, {table_name : csv_file_written}],
                 "timestamp_json_files_written": timestamp_json_files_written (list)}
     """
     try:
@@ -48,7 +49,7 @@ def lambda_handler(event, context):
             if rows != []:
                 df = table_to_dataframe(rows, columns)
                 csv_key = write_df_to_csv(s3, df, table)["key"]
-                csv_files_written.append(csv_key)
+                csv_files_written.append({table: csv_key})
                 json_key = write_timestamp_to_s3(s3, df, table)["key"]
                 timestamp_json_files_written.append(json_key)
             else:
