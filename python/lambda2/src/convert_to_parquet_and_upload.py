@@ -52,7 +52,7 @@ def upload_to_processing_bucket(s3, parq_buffer, table_name):
                 Body=parq_buffer.getvalue(),
                 Key=f"{table_name}/{table_name}_{timestamp}.parquet",
             )
-            return {"result": "Success"}
+            return {table_name: f"{table_name}/{table_name}_{timestamp}.parquet"}
         except Exception as e:
             logging.error(e)
     else:

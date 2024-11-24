@@ -34,7 +34,7 @@ class TestUploadToProcessingBucket:
         output = upload_to_processing_bucket(
             processing_bucket, test_parquet, table_name
         )
-        assert output == {"result": "Success"}
+        assert output == {"dim_design": "dim_design/dim_design_timestamp.parquet"}
 
         expected_name = "dim_design/dim_design_timestamp.parquet"
         test_bucket = "nc-terraformers-processing"
