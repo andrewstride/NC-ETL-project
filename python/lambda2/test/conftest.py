@@ -67,6 +67,11 @@ def ingestion_bucket():
             "nc-terraformers-ingestion",
             "staff/staff_2024-11-18 19_15_01.821957.csv",
         )
+        s3.upload_file(
+            "python/lambda2/test/department_2022-11-03 14_20_49.962000.csv",
+            "nc-terraformers-ingestion",
+            "department/department_2022-11-03 14_20_49.962000.csv",
+        )
         yield s3
 
 
@@ -91,3 +96,11 @@ def test_df2():
     data = [["h1", "j1"], ["h2", "j2"], ["h3", "j3"]]
     input_df = pd.DataFrame(data, columns=["col1", "col2"])
     yield input_df
+
+
+@pytest.fixture(scope="function")
+def test_sales_df():
+    with open(
+        "python/lambda2/test/sales_order_2024-11-20 16_18_09.992000.csv", "r"
+    ) as f:
+        return pd.read_csv(f)
