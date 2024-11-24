@@ -48,3 +48,23 @@ def split_timestamp(timestamp):
     Returns: [date, time]
     """
     return [timestamp[:10], timestamp[11:]]
+
+
+def check_for_dim_date(s3):
+    """Checks if dim_date present in processing bucket
+    Args:
+        s3 (boto3.client('s3')): boto3 client connection
+
+    Returns:
+      (bool): dim_date file in processing bucket
+    """
+    logging.info("Checking for dim_date file in processing bucket")
+    response = s3.list_objects_v2(Bucket="nc-terraformers-processing").get("Contents")
+    if response:
+        bucket_files = [file.get("Key") for file in response]
+        for item in bucket_files:
+            if item[: len("dim_date/dim_date")] == "dim_date/dim_date":
+                logging.info(f"dim_date file found: {item}")
+                return True
+    logging.info("dim_date file not found")
+    return False

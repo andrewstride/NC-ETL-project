@@ -1,5 +1,5 @@
 from testfixtures import LogCapture
-from src.utils import collate_csv_into_df, split_timestamp
+from src.utils import collate_csv_into_df, split_timestamp, check_for_dim_date
 import pandas as pd
 import pytest
 
@@ -33,3 +33,32 @@ class TestSplitTimestamp:
     def test_returns_time(self):
         output = split_timestamp("2024-12-01 15:32:10.242324")
         assert output[1] == "15:32:10.242324"
+
+
+class TestCheckForDimDate:
+    def test_returns_bool(self, processing_bucket):
+        assert isinstance(check_for_dim_date(processing_bucket), bool)
+
+    def test_returns_false_on_empty(self, processing_bucket):
+        assert check_for_dim_date(processing_bucket) == False
+
+    def test_returns_true_if_dim_date_present(self, processing_bucket):
+        processing_bucket.put_object(
+            Bucket="nc-terraformers-processing",
+            Body="test",
+            Key="dim_date/dim_date_1234.parquet",
+        )
+        assert check_for_dim_date(processing_bucket) == True
+
+    def test_progress_logged(self, processing_bucket):
+        with LogCapture() as l:
+            check_for_dim_date(processing_bucket)
+            assert "Checking for dim_date file in processing bucket" in str(l)
+            assert "dim_date file not found" in str(l)
+            processing_bucket.put_object(
+                Bucket="nc-terraformers-processing",
+                Body="test",
+                Key="dim_date/dim_date_1234.parquet",
+            )
+            check_for_dim_date(processing_bucket)
+            assert "dim_date file found: dim_date/dim_date_1234.parquet"
