@@ -37,3 +37,14 @@ def collate_csv_into_df(s3, table_name):
         return merged_df
     except Exception as e:
         logging.error(f"Encountered error gathering {table_name} files: {e}")
+
+
+def split_timestamp(timestamp):
+    """Splits timestamp into date and time
+
+    Args:
+        timestamp (timestamp): YYYY-MM-DD HH:MM:SS.US
+
+    Returns: [date, time]
+    """
+    return [timestamp[:10], timestamp[11:]]

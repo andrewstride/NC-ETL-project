@@ -1,5 +1,5 @@
 from testfixtures import LogCapture
-from src.utils import collate_csv_into_df
+from src.utils import collate_csv_into_df, split_timestamp
 import pandas as pd
 import pytest
 
@@ -23,3 +23,13 @@ class TestCollateCSVtoDF:
     def test_gathers_single_file(self, ingestion_bucket):
         staff_df = collate_csv_into_df(ingestion_bucket, "staff")
         assert len(staff_df) == 475
+
+
+class TestSplitTimestamp:
+    def test_returns_date(self):
+        output = split_timestamp("2024-12-01 15:32:10.242324")
+        assert output[0] == "2024-12-01"
+
+    def test_returns_time(self):
+        output = split_timestamp("2024-12-01 15:32:10.242324")
+        assert output[1] == "15:32:10.242324"
