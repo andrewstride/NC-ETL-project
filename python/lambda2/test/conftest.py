@@ -43,7 +43,7 @@ def ingestion_bucket():
             "design_timestamp.json",
         )
         s3.upload_file(
-            "python/lambda2/test/design_timestamp.json",
+            "python/lambda2/test/staff_timestamp.json",
             "nc-terraformers-ingestion",
             "staff_timestamp.json",
         )
@@ -65,7 +65,7 @@ def ingestion_bucket():
         s3.upload_file(
             "python/lambda2/test/staff_2024-11-18 16_53_23.353536.csv",
             "nc-terraformers-ingestion",
-            "staff/staff_2024-11-18 19_15_01.821957.csv",
+            "staff/staff_2024-11-18 16_53_23.353536.csv",
         )
         yield s3
 

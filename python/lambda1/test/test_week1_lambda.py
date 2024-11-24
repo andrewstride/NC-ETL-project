@@ -422,7 +422,19 @@ class TestLambdaHandler:
         # Assert Lambda returns 200 and filenames in dict
         output = lambda_handler({}, {})
         assert output["response"] == 200
-        assert len(output["csv_files_written"]) == 11
+        assert list(output["csv_files_written"].keys()) == [
+            "sales_order",
+            "transaction",
+            "department",
+            "staff",
+            "purchase_order",
+            "counterparty",
+            "payment",
+            "currency",
+            "payment_type",
+            "address",
+            "design",
+        ]
         assert len(output["timestamp_json_files_written"]) == 11
         # List contents of mocked bucket
         response = s3.list_objects(Bucket="nc-terraformers-ingestion")

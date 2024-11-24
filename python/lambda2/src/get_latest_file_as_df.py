@@ -24,7 +24,7 @@ def get_latest_file_as_df(s3, table_name):
         )
         latest_timestamp = json.loads(
             latest_timestamp_json["Body"].read().decode("utf-8")
-        )["design"]
+        )[table_name]
 
         """ Get latest file of table """
         latest_data = (
