@@ -124,8 +124,3 @@ def lambda_handler(event, context):
         logging.error(e)
         return {"error": e}
 
-
-# TODO
-
-# lambda
-# lambda tests
