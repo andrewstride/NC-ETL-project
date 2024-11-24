@@ -9,11 +9,10 @@ from src.lambda3_connection import get_wh_creds, wh_connection
 from pg8000.native import Connection
 
 
-
-
 @pytest.fixture(scope="function")
 def refresh_dim_staff(conn_fixture):
     conn_fixture.run("DELETE FROM dim_staff;")
+
 
 class TestGetCreds:
     def test_wh_creds_retrieves_dict(self):

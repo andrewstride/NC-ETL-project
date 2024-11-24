@@ -20,6 +20,7 @@ from src.lambda1_utils import (
     timestamp_from_df,
     write_timestamp_to_s3,
 )
+from pg8000.native import Connection
 
 
 @pytest.fixture(scope="function")
@@ -94,6 +95,12 @@ class TestGetDBCreds:
         creds = get_db_creds()
         for cred in creds:
             assert isinstance(creds[cred], str)
+
+
+class TestConnection:
+    def test_connection_formed(self):
+        conn = db_connection()
+        assert isinstance(conn, Connection)
 
 
 class TestGetTables:

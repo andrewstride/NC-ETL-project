@@ -1,4 +1,25 @@
-# placeholder for Lambda2
+from src.convert_to_parquet_and_upload import (
+    convert_to_parquet,
+    upload_to_processing_bucket,
+)
+from src.dim_counterparty import dim_counterparty
+from src.dim_currency import dim_currency
+from src.dim_date_table import dim_date
+from src.dim_design import dim_design
+from src.dim_location import dim_location
+from src.dim_staff import create_dim_staff
+from src.fact_sales_order import fact_sales_order
+from src.get_latest_file_as_df import get_latest_file_as_df
+from src.utils import collate_csv_into_df
+
+from datetime import datetime
+import logging
+import boto3
+
+logger = logging.getLogger()
+logger.setLevel("INFO")
+
+
 def lambda_handler(event, context):
     """
     Event input:
@@ -12,14 +33,27 @@ def lambda_handler(event, context):
                                 table_name2: pq file 2}
                                 }
     """
-    # try:
-    # connect to data warehouse
-    # create s3 client
-    # create csv_files_written dict
-    # for table in csv_files_written:
-    # match table name with util function & any other processes
-    # staff and counterparty need to join on second table for transformation
-    # if dim_date not in s3, write it
-    # return output dict
+    try:
+        csv_files_written = event["csv_files_written"]
+        # create s3 client
+        s3 = boto3.client("s3")
+        # create parquet_files_written dict
+        parquet_files_written = {}
+        # for table in parquet_files_written:
+        for table in parquet_files_written:
+            print(table)
+        # match table name with util function & any other processes
+        # staff and counterparty need to join on second table for transformation
+        # if dim_date not in s3, write it
+        # return output dict
+        return csv_files_written
 
-    pass
+    except Exception as e:
+        logging.error(e)
+
+
+# TODO
+# connection
+# fact sales
+# lambda
+# lambda tests
