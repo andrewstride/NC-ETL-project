@@ -28,7 +28,7 @@ def processing_bucket():
 
 
 @pytest.fixture(scope="function")
-def ingestion_bucket():
+def ingestion_bucket(processing_bucket):
     with mock_aws():
         s3 = boto3.client("s3")
         test_bucket = "nc-terraformers-ingestion"
@@ -63,9 +63,9 @@ def ingestion_bucket():
             "design/design_2024-11-18 19_15_01.821957.csv",
         )
         s3.upload_file(
-            "python/lambda2/test/staff_2024-11-18 19_15_01.821957.csv",
+            "python/lambda2/test/staff_2022-11-03 14_20_51.563000.csv",
             "nc-terraformers-ingestion",
-            "staff/staff_2024-11-18 19_15_01.821957.csv",
+            "staff/staff_2022-11-03 14_20_51.563000.csv",
         )
         s3.upload_file(
             "python/lambda2/test/department_2022-11-03 14_20_49.962000.csv",
@@ -92,7 +92,7 @@ def ingestion_bucket():
             "nc-terraformers-ingestion",
             "sales_order/sales_order_2024-11-20 16_18_09.992000.csv",
         )
-        
+
         yield s3
 
 

@@ -22,7 +22,7 @@ class TestCollateCSVtoDF:
 
     def test_gathers_single_file(self, ingestion_bucket):
         staff_df = collate_csv_into_df(ingestion_bucket, "staff")
-        assert len(staff_df) == 475
+        assert len(staff_df) == 20
 
 
 class TestSplitTimestamp:

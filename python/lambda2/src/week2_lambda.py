@@ -42,22 +42,52 @@ def lambda_handler(event, context):
         # for table in parquet_files_written:
         for table in csv_files_written:
             match table:
+                case "sales_order":
+                    sales_df = get_latest_file_as_df(s3, csv_files_written[table])
+                    fact_sales = fact_sales_order(sales_df)
+                    fact_sales_pq = convert_to_parquet(fact_sales)
+                    pq_dict = upload_to_processing_bucket(
+                        s3, fact_sales_pq, "fact_sales_order"
+                    )
+                    parquet_files_written.update(pq_dict)
                 case "staff":
                     staff_df = get_latest_file_as_df(s3, csv_files_written[table])
                     dept_df = collate_csv_into_df(s3, "department")
                     dim_staff = create_dim_staff(staff_df, dept_df)
                     staff_pq = convert_to_parquet(dim_staff)
-                    pq_written = upload_to_processing_bucket(s3, staff_pq, "dim_staff")
+                    pq_dict = upload_to_processing_bucket(s3, staff_pq, "dim_staff")
+                    parquet_files_written.update(pq_dict)
+                case "address":
+                    address_df = get_latest_file_as_df(s3, csv_files_written[table])
+                    dim_loc_df = dim_location(address_df)
+                    loc_pq = convert_to_parquet(dim_loc_df)
+                    pq_dict = upload_to_processing_bucket(s3, loc_pq, "dim_location")
+                    parquet_files_written.update(pq_dict)
                 case "design":
                     design_df = get_latest_file_as_df(s3, csv_files_written[table])
-                    design_pq = convert_to_parquet(design_df)
-                    pq_written = upload_to_processing_bucket(s3, design_pq, table)
-                    parquet_files_written["dim_design"] = pq_written
+                    dim_design_df = dim_design(design_df)
+                    design_pq = convert_to_parquet(dim_design_df)
+                    pq_dict = upload_to_processing_bucket(s3, design_pq, "dim_design")
+                    parquet_files_written.update(pq_dict)
+                case "currency":
+                    currency_df = get_latest_file_as_df(s3, csv_files_written[table])
+                    dim_currency_df = dim_currency(currency_df)
+                    currency_pq = convert_to_parquet(dim_currency_df)
+                    pq_dict = upload_to_processing_bucket(
+                        s3, currency_pq, "dim_currency"
+                    )
+                    parquet_files_written.update(pq_dict)
+                case "counterparty":
+                    counter_df = get_latest_file_as_df(s3, csv_files_written[table])
+                    address_df = collate_csv_into_df(s3, "address")
+                    dim_counter_df = dim_counterparty(counter_df, address_df)
+                    dim_counter_pq = convert_to_parquet(dim_counter_df)
+                    pq_dict = upload_to_processing_bucket(
+                        s3, dim_counter_pq, "dim_counterparty"
+                    )
+                    parquet_files_written.update(pq_dict)
 
-        # match table name with util function & any other processes
-        # staff and counterparty need to join on second table for transformation
         # if dim_date not in s3, write it
-        # return output dict
         return {"response": 200, "parquet_files_written": parquet_files_written}
 
     except Exception as e:
@@ -65,8 +95,6 @@ def lambda_handler(event, context):
 
 
 # TODO
-# Put more CSV files in ingestion test bucket
-
 
 # lambda
 # lambda tests - MOCKING PATCHING
