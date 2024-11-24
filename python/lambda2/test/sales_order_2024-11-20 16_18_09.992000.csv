@@ -1,0 +1,4 @@
+sales_order_id,created_at,last_updated,design_id,staff_id,counterparty_id,units_sold,unit_price,currency_id,agreed_delivery_date,agreed_payment_date,agreed_delivery_location_id
+11263,2024-11-20 16:18:09.992,2024-11-20 16:18:09.992,214,12,17,63517,3.42,3,2024-11-21,2024-11-23,24
+11258,2024-11-20 13:23:10.237,2024-11-20 13:23:10.237,76,18,12,83271,3.65,3,2024-11-22,2024-11-20,14
+

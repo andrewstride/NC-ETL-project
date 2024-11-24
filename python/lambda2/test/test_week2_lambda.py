@@ -18,11 +18,15 @@ def test_event_input():
     }
 
 
-# TODO
-# Put more CSV files in ingestion test bucket
+# class TestLambda2:
+#     @mock_aws
+#     def test_returns_dict(self, test_event_input):
+#         assert isinstance(lambda_handler(test_event_input, {}), dict)
 
-
-class TestLambda2:
-    @mock_aws
-    def test_returns_dict(self, test_event_input):
-        assert isinstance(lambda_handler(test_event_input, {}), dict)
+#     @mock_aws
+#     def test_returns_parquet_files_written_in_dict(self, test_event_input):
+#         output = lambda_handler(test_event_input, {})
+#         assert list(output["parquet_files_written"].keys()) == [
+#             "dim_staff",
+#             "dim_design",
+#         ]
