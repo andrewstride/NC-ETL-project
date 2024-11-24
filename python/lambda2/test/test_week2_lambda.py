@@ -262,4 +262,15 @@ class TestLambda2:
             "quarter",
         ]
 
-
+    @patch("src.week2_lambda.boto3")
+    def test_logs_progress(self, mock_boto3, ingestion_bucket, test_event_input):
+        with LogCapture() as l:
+            # patch in s3 connection with filled ingestion bucket and empty processing bucket
+            s3 = ingestion_bucket
+            mock_boto3.client.return_value = s3
+            # Run function
+            lambda_handler(test_event_input, {})
+            # Assert in logs
+            assert "staff data transformation beginning" in str(l)
+            assert "design data transformation beginning" in str(l)
+            assert "creating dim_date" in str(l)
