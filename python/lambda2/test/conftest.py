@@ -72,6 +72,27 @@ def ingestion_bucket():
             "nc-terraformers-ingestion",
             "department/department_2022-11-03 14_20_49.962000.csv",
         )
+        s3.upload_file(
+            "python/lambda2/test/address_2022-11-03 14_20_49.962000.csv",
+            "nc-terraformers-ingestion",
+            "address/address_2022-11-03 14_20_49.962000.csv",
+        )
+        s3.upload_file(
+            "python/lambda2/test/counterparty_2022-11-03 14_20_51.563000.csv",
+            "nc-terraformers-ingestion",
+            "counterparty/counterparty_2022-11-03 14_20_51.563000.csv",
+        )
+        s3.upload_file(
+            "python/lambda2/test/currency_2022-11-03 14_20_49.962000.csv",
+            "nc-terraformers-ingestion",
+            "currency/currency_2022-11-03 14_20_49.962000.csv",
+        )
+        s3.upload_file(
+            "python/lambda2/test/sales_order_2024-11-20 16_18_09.992000.csv",
+            "nc-terraformers-ingestion",
+            "sales_order/sales_order_2024-11-20 16_18_09.992000.csv",
+        )
+        
         yield s3
 
 
