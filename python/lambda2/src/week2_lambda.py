@@ -18,6 +18,7 @@ def lambda_handler(event, context):
     # create csv_files_written dict
     # for table in csv_files_written:
     # match table name with util function & any other processes
+    # staff and counterparty need to join on second table for transformation
     # if dim_date not in s3, write it
     # return output dict
 
