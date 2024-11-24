@@ -110,6 +110,8 @@ def lambda_handler(event, context):
                     logging.info(
                         f"{csv_files_written[table]} transformed into {pq_dict}"
                     )
+                case v:
+                    logging.warning(f"Unexpected input in event: {v}")
 
         if not check_for_dim_date(s3):
             logging.info("creating dim_date")
@@ -123,4 +125,3 @@ def lambda_handler(event, context):
     except Exception as e:
         logging.error(e)
         return {"error": e}
-
