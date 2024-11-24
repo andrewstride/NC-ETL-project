@@ -28,6 +28,17 @@ def processing_bucket():
 
 
 @pytest.fixture(scope="function")
+def processing_bucket_with_dim_date(processing_bucket):
+    with mock_aws():
+        processing_bucket.put_object(
+            Bucket="nc-terraformers-processing",
+            Body="test",
+            Key="dim_date/dim_date_1234.parquet",
+        )
+        yield processing_bucket
+
+
+@pytest.fixture(scope="function")
 def ingestion_bucket(processing_bucket):
     with mock_aws():
         s3 = boto3.client("s3")

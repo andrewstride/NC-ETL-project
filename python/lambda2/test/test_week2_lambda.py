@@ -93,10 +93,7 @@ class TestLambda2:
         # Assert output contains corresponding written file info that matches bucket contents
         for filepath in list(pq_written.values()):
             assert filepath in content_list
-        assert list(pq_written.keys()) == [
-            "dim_staff",
-            "dim_design",
-        ]
+        assert list(pq_written.keys()) == ["dim_staff", "dim_design", "dim_date"]
 
     @patch("src.week2_lambda.boto3")
     def test_fact_sales_event_input(
@@ -112,7 +109,7 @@ class TestLambda2:
         response = s3.list_objects(Bucket="nc-terraformers-processing")
         content_list = [item["Key"] for item in response["Contents"]]
         # Assert output contains corresponding written file info that matches bucket contents
-        assert list(pq_written.keys()) == ["fact_sales_order"]
+        assert list(pq_written.keys()) == ["fact_sales_order", "dim_date"]
         # Get resulting fact_sales_order parquet file from bucket and read into dataframe
         response = s3.get_object(
             Bucket="nc-terraformers-processing", Key=pq_written["fact_sales_order"]
@@ -150,7 +147,7 @@ class TestLambda2:
         response = s3.list_objects(Bucket="nc-terraformers-processing")
         content_list = [item["Key"] for item in response["Contents"]]
         # Assert output contains corresponding written file info that matches bucket contents
-        assert list(pq_written.keys()) == ["dim_location"]
+        assert list(pq_written.keys()) == ["dim_location", "dim_date"]
         # Get resulting dim_location parquet file from bucket and read into dataframe
         response = s3.get_object(
             Bucket="nc-terraformers-processing", Key=pq_written["dim_location"]
@@ -182,7 +179,7 @@ class TestLambda2:
         response = s3.list_objects(Bucket="nc-terraformers-processing")
         content_list = [item["Key"] for item in response["Contents"]]
         # Assert output contains corresponding written file info that matches bucket contents
-        assert list(pq_written.keys()) == ["dim_currency"]
+        assert list(pq_written.keys()) == ["dim_currency", "dim_date"]
         # Get resulting dim_currency parquet file from bucket and read into dataframe
         response = s3.get_object(
             Bucket="nc-terraformers-processing", Key=pq_written["dim_currency"]
@@ -207,7 +204,7 @@ class TestLambda2:
         response = s3.list_objects(Bucket="nc-terraformers-processing")
         content_list = [item["Key"] for item in response["Contents"]]
         # Assert output contains corresponding written file info that matches bucket contents
-        assert list(pq_written.keys()) == ["dim_counterparty"]
+        assert list(pq_written.keys()) == ["dim_counterparty", "dim_date"]
         # Get resulting dim_counterparty parquet file from bucket and read into dataframe
         response = s3.get_object(
             Bucket="nc-terraformers-processing", Key=pq_written["dim_counterparty"]
@@ -227,3 +224,42 @@ class TestLambda2:
             "counterparty_legal_country",
             "counterparty_phone_number",
         ]
+
+    @patch("src.week2_lambda.boto3")
+    def test_dim_date_written_if_not_found(self, mock_boto3, ingestion_bucket):
+        # patch in s3 connection with filled ingestion bucket and empty processing bucket
+        s3 = ingestion_bucket
+        mock_boto3.client.return_value = s3
+        empty_event = {
+            "response": 200,
+            "csv_files_written": {},
+            "timestamp_json_files_written": [],
+        }
+        # Run function
+        output = lambda_handler(empty_event, {})
+        # Collect output info and bucket contents
+        pq_written = output["parquet_files_written"]
+        response = s3.list_objects(Bucket="nc-terraformers-processing")
+        content_list = [item["Key"] for item in response["Contents"]]
+        # Assert output contains corresponding written file info that matches bucket contents
+        assert list(pq_written.keys()) == ["dim_date"]
+        # Get resulting dim_date parquet file from bucket and read into dataframe
+        response = s3.get_object(
+            Bucket="nc-terraformers-processing", Key=pq_written["dim_date"]
+        )
+        body = response["Body"]
+        pq = body.read()
+        df = pd.read_parquet(BytesIO(pq))
+        # Assert dataframe in correct fact_sales schema
+        assert list(df.columns) == [
+            "date_id",
+            "year",
+            "month",
+            "day",
+            "day_of_week",
+            "day_name",
+            "month_name",
+            "quarter",
+        ]
+
+
