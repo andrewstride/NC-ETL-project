@@ -9,6 +9,8 @@ It also contains **three Lambdas**...
 - **Lambda2** - takes data from the ingestion bucket, transforms it into star-schema format, and places it, as parquet format, in the processing bucket.
 - **Lambda3** - takes data from the processing bucket and places it within the OLAP data warehouse.
 
+The Lambdas also have CloudWatch alerts, and if a serious alert is triggered, an email is sent to: TheTerraformers@protonmail.com.
+
 ## Usage
 
 There are several make commands that can be run when using the project...
