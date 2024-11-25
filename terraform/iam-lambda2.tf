@@ -8,8 +8,9 @@ resource "aws_iam_role" "role_for_lambda2" {
 data "aws_iam_policy_document" "s3_put_object_document_lambda2" {
     statement {
         effect = "Allow"
-        actions = ["S3:PutObject"]
-        resources = ["${aws_s3_bucket.processing_bucket.arn}/*"]
+        actions = ["S3:PutObject", "S3:ListBucket"]
+        resources = ["${aws_s3_bucket.processing_bucket.arn}/*",
+                     "${aws_s3_bucket.processing_bucket.arn}"]
     }
 }
 
