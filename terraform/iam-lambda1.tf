@@ -74,14 +74,14 @@ resource "aws_iam_role_policy" "role_policy_for_lambda1_sns" {
 }
 
 ## Policy for lambda1, for lambda1 to get secret value
-resource "aws_iam_policy" "get_secret_value_policy_for_lambda1" {
-    name = "get_secret_value_policy_for_${var.lambda1_name}"
-    policy = data.aws_iam_policy_document.get_secret_value_policy.json
+resource "aws_iam_policy" "get_source_secret_value_policy_for_lambda1" {
+    name = "get_source_secret_value_policy_for_${var.lambda1_name}"
+    policy = data.aws_iam_policy_document.get_source_secret_value_policy.json
 }
 
 
 ## Attach the get secret value policy to the lambda1 iam role
 resource "aws_iam_role_policy_attachment" "get_secret_value_attachment_for_lambda1" {
     role = aws_iam_role.role_for_lambda1.name
-    policy_arn = aws_iam_policy.get_secret_value_policy_for_lambda1.arn
+    policy_arn = aws_iam_policy.get_source_secret_value_policy_for_lambda1.arn
 }
