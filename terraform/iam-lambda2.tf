@@ -8,7 +8,7 @@ resource "aws_iam_role" "role_for_lambda2" {
 data "aws_iam_policy_document" "s3_put_object_document_lambda2" {
     statement {
         effect = "Allow"
-        actions = ["S3:PutObject", "S3:ListBucket"]
+        actions = ["S3:PutObject"]
         resources = ["${aws_s3_bucket.processing_bucket.arn}/*",
                      "${aws_s3_bucket.processing_bucket.arn}"]
     }
@@ -20,6 +20,18 @@ data "aws_iam_policy_document" "s3_get_object_document_lambda2" {
         effect = "Allow"
         actions = ["S3:GetObject"]
         resources = ["${aws_s3_bucket.ingestion_bucket.arn}/*"]
+    }
+}
+
+## Policy document to ListBuckets
+data "aws_iam_policy_document" "s3_listbuckets_document_lambda2"{
+    statement {
+        effect = "Allow"
+        actions = ["S3:ListBucket"]
+        resources = ["${aws_s3_bucket.processing_bucket.arn}/*",
+                     "${aws_s3_bucket.processing_bucket.arn}",
+                     "${aws_s3_bucket.ingestion_bucket.arn}/*",
+                     "${aws_s3_bucket.ingestion_bucket.arn}"]
     }
 }
 
@@ -35,6 +47,11 @@ resource "aws_iam_policy" "s3_get_policy_for_lambda2" {
     policy = data.aws_iam_policy_document.s3_get_object_document_lambda2.json
 }
 
+## Policy for lambda2 to have ListBuckets Permission
+resource "aws_iam_policy" "s3_listbuckets_policy_for_lambda2" {
+    name = "s3_listbuckets_policy_for_${var.lambda2_name}"
+    policy = data.aws_iam_policy_document.s3_listbuckets_document_lambda2.json
+}
 ## Attach the S3 PUT object policy to the lambda2 iam role
 resource "aws_iam_role_policy_attachment" "s3_put_object_attachment_for_lambda2" {
     role = aws_iam_role.role_for_lambda2.name
@@ -45,6 +62,12 @@ resource "aws_iam_role_policy_attachment" "s3_put_object_attachment_for_lambda2"
 resource "aws_iam_role_policy_attachment" "s3_get_object_attachment_for_lambda2" {
     role = aws_iam_role.role_for_lambda2.name
     policy_arn = aws_iam_policy.s3_get_policy_for_lambda2.arn
+}
+
+## Attach the S3 s3_listbuckets policy to the lambda2 iam role
+resource "aws_iam_role_policy_attachment" "s3_listbuckets_attachment_for_lambda2" {
+    role = aws_iam_role.role_for_lambda2.name
+    policy_arn = aws_iam_policy.s3_listbuckets_policy_for_lambda2.arn
 }
 
 ## Policy for lambda2, for lambda2 to log to Cloudwatch
