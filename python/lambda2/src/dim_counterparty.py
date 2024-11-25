@@ -34,7 +34,7 @@ def dim_counterparty(counterparty_df, address_df):
                 "city": "counterparty_legal_city",
                 "postal_code": "counterparty_legal_postal_code",
                 "country": "counterparty_legal_country",
-                "phone": "counterparty_phone_number",
+                "phone": "counterparty_legal_phone_number",
             }
             dim_counterparty_df.rename(columns=rename_dict, inplace=True)
             # Drop columns not needed
