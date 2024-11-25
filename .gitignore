@@ -19,5 +19,3 @@ terraform/init.sh
 
 #area for files to be deployed to AWS
 terraform-remote-deployment/
-
-*.zip
