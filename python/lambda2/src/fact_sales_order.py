@@ -43,18 +43,22 @@ def fact_sales_order(sales_df):
     try:
         output_df = pd.DataFrame()
         output_df["sales_order_id"] = sales_df["sales_order_id"]
-        output_df["created_date"] = split_timestamp(sales_df["created_at"])[0]
-        output_df["created_time"] = split_timestamp(sales_df["created_at"])[1]
-        output_df["last_updated_date"] = split_timestamp(sales_df["last_updated"])[0]
-        output_df["last_updated_time"] = split_timestamp(sales_df["last_updated"])[1]
+        output_df["created_date"] = pd.to_datetime(sales_df["created_at"]).dt.date
+        output_df["created_time"] = pd.to_datetime(sales_df["created_at"]).dt.time
+        output_df["last_updated_date"] = pd.to_datetime(
+            sales_df["last_updated"]
+        ).dt.date
+        output_df["last_updated_time"] = pd.to_datetime(
+            sales_df["last_updated"]
+        ).dt.time
         output_df["sales_staff_id"] = sales_df["staff_id"]
         output_df["counterparty_id"] = sales_df["counterparty_id"]
         output_df["units_sold"] = sales_df["units_sold"]
         output_df["unit_price"] = sales_df["unit_price"]
         output_df["currency_id"] = sales_df["currency_id"]
         output_df["design_id"] = sales_df["design_id"]
-        output_df["agreed_payment_date"] = sales_df["agreed_payment_date"]
-        output_df["agreed_delivery_date"] = sales_df["agreed_delivery_date"]
+        output_df["agreed_payment_date"] = pd.to_datetime(sales_df["agreed_payment_date"]).dt.date
+        output_df["agreed_delivery_date"] = pd.to_datetime(sales_df["agreed_delivery_date"]).dt.date
         output_df["agreed_delivery_location_id"] = sales_df[
             "agreed_delivery_location_id"
         ]
