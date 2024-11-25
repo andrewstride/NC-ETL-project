@@ -11,3 +11,4 @@ resource "aws_lambda_layer_version" "layer_for_lambda2" {
     s3_bucket = aws_s3_object.lambda2_layer.bucket
     s3_key = aws_s3_object.lambda2_layer.key
 }
+
