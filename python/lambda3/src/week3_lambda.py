@@ -9,10 +9,11 @@ logger.setLevel("INFO")
 
 def lambda_handler(event, context):
     """
-        Event:
+        Event input:
     {"response": 200,
     "parquet_files_written": {table_name: parquet_files_written,
-                                table_name2: pq file 2}}
+                                table_name2: pq file 2}
+                                }
     """
     try:
         logging.info("Connecting to Processing Bucket")

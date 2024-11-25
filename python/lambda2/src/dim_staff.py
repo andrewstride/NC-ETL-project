@@ -7,14 +7,12 @@ def create_dim_staff(staff_df, dept_df):
     latest file of that table from the ingestion bucket,
     and returns the data as a DataFrame
 
-    Paramaters:
-        get_latest_file_as_df(): takes the argument returns the dataframe
-        s3: Boto3.client('s3') connection
-        table_name (str): the name of a table for the star_schema
+    Parameters:
+    Staff table (DataFrame)
+    Department table (DataFrame)
 
     Returns:
         DataFrame: of the latest data of the given table
-        Dict (dict): {"result": "Failure"} if unsuccessful
     """
     try:
         staff_department = staff_df.merge(

@@ -5,11 +5,30 @@ from src.week3_lambda import lambda_handler
 from src.lambda3_utils import import_pq_to_df, df_to_sql
 from testfixtures import LogCapture
 from moto import mock_aws
+from src.lambda3_connection import get_wh_creds, wh_connection
+from pg8000.native import Connection
 
 
 @pytest.fixture(scope="function")
 def refresh_dim_staff(conn_fixture):
     conn_fixture.run("DELETE FROM dim_staff;")
+
+
+class TestGetCreds:
+    def test_wh_creds_retrieves_dict(self):
+        creds = get_wh_creds()
+        assert isinstance(creds, dict)
+
+    def test_contains_strings(self):
+        creds = get_wh_creds()
+        for cred in creds:
+            assert isinstance(creds[cred], str)
+
+
+class TestConnection:
+    def test_connection_formed(self):
+        conn = wh_connection()
+        assert isinstance(conn, Connection)
 
 
 class TestGetParquet:

@@ -19,20 +19,39 @@ def dim_counterparty(counterparty_df, address_df):
         address_df, pd.DataFrame
     ):
         try:
-            new_df = counterparty_df[
-                ["counterparty_id", "counterparty_legal_name"]
-            ].copy()
-
-            new_df["counterparty_legal_address_line_1"] = address_df["address_line_1"]
-            new_df["counterparty_legal_address_line_2"] = address_df["address_line_2"]
-            new_df["counterparty_legal_district"] = address_df["district"]
-            new_df["counterparty_legal_city"] = address_df["city"]
-            new_df["counterparty_legal_postal_code"] = address_df["postal_code"]
-            new_df["counterparty_legal_country"] = address_df["country"]
-            new_df["counterparty_phone_number"] = address_df["phone"]
-            return new_df
+            # Join address table ON address_ID
+            dim_counterparty_df = counterparty_df.merge(
+                address_df,
+                how="left",
+                left_on="legal_address_id",
+                right_on="address_id",
+            )
+            # Rename to dim column names
+            rename_dict = {
+                "address_line_1": "counterparty_legal_address_line_1",
+                "address_line_2": "counterparty_legal_address_line_2",
+                "district": "counterparty_legal_district",
+                "city": "counterparty_legal_city",
+                "postal_code": "counterparty_legal_postal_code",
+                "country": "counterparty_legal_country",
+                "phone": "counterparty_phone_number",
+            }
+            dim_counterparty_df.rename(columns=rename_dict, inplace=True)
+            # Drop columns not needed
+            drop_columns = [
+                "legal_address_id",
+                "commercial_contact",
+                "delivery_contact",
+                "created_at_x",
+                "last_updated_x",
+                "address_id",
+                "created_at_y",
+                "last_updated_y",
+            ]
+            dim_counterparty_df.drop(columns=drop_columns, inplace=True)
+            return dim_counterparty_df
         except Exception as e:
             logging.error(e)
     else:
-        logging.error("Given paramater should be a DataFrame.")
+        logging.error("Given parameter should be a DataFrame.")
     return {"result": "Failure"}
