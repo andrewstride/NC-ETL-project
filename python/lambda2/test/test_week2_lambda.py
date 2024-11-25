@@ -222,7 +222,7 @@ class TestLambda2:
             "counterparty_legal_city",
             "counterparty_legal_postal_code",
             "counterparty_legal_country",
-            "counterparty_phone_number",
+            "counterparty_legal_phone_number",
         ]
 
     @patch("src.week2_lambda.boto3")
