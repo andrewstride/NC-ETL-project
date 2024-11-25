@@ -22,12 +22,21 @@ data "aws_iam_policy_document" "Cloudwatch_log_document" {
     }
 }
 
-## Policy document for Secrets Manager get secret value permission (a way of portraying the JSON)
-data "aws_iam_policy_document" "get_secret_value_policy" {
+## Policy document for Secrets Manager get secret value permission for Source DB (a way of portraying the JSON)
+data "aws_iam_policy_document" "get_source_secret_value_policy" {
     statement {
         effect = "Allow"
         actions = ["secretsmanager:GetSecretValue"]
         resources = [ "arn:aws:secretsmanager:eu-west-2:796973515606:secret:totesys-conn-430tOE" ]
+    }
+}
+
+## Policy document for Secrets Manager get secret value permission for Endpoint DB (a way of portraying the JSON)
+data "aws_iam_policy_document" "get_endpoint_secret_value_policy" {
+    statement {
+        effect = "Allow"
+        actions = ["secretsmanager:GetSecretValue"]
+        resources = [ "arn:aws:secretsmanager:eu-west-2:796973515606:secret:warehouse-conn-yFnQIW" ]
     }
 }
 
