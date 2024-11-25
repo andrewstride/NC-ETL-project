@@ -43,11 +43,11 @@ def split_timestamp(timestamp):
     """Splits timestamp into date and time
 
     Args:
-        timestamp (timestamp): YYYY-MM-DD HH:MM:SS.US
+        timestamp (timestamp): YYYY-MM-DD HH:MM:SS
 
     Returns: [date, time]
     """
-    return [timestamp[:10], timestamp[11:]]
+    return [timestamp[:10], timestamp[11:19]]
 
 
 def check_for_dim_date(s3):
