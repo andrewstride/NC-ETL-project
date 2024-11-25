@@ -1,4 +1,3 @@
-
 ## zip file for lambda2 in S3 code bucket
 resource "aws_s3_object" "lambda2" {
   bucket = aws_s3_bucket.code_bucket.bucket
@@ -16,3 +15,4 @@ resource "aws_s3_object" "lambda2_layer" {
   etag   = filemd5(data.archive_file.layer_code_for_lambda2.output_path)
   depends_on = [ data.archive_file.layer_code_for_lambda2 ]
 }
+
