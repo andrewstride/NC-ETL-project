@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "s3_get_object_document_lambda2" {
 data "aws_iam_policy_document" "s3_listbuckets_document_lambda2"{
     statement {
         effect = "Allow"
-        actions = ["S3:ListBuckett"]
+        actions = ["S3:ListBucket"]
         resources = ["${aws_s3_bucket.processing_bucket.arn}/*",
                      "${aws_s3_bucket.processing_bucket.arn}",
                      "${aws_s3_bucket.ingestion_bucket.arn}/*",
@@ -48,9 +48,9 @@ resource "aws_iam_policy" "s3_get_policy_for_lambda2" {
 }
 
 ## Policy for lambda2 to have ListBuckets Permission
-resource "aws_iam_policy" "s3_listbuckets_for_lambda2" {
+resource "aws_iam_policy" "s3_listbuckets_policy_for_lambda2" {
     name = "s3_listbuckets_policy_for_${var.lambda2_name}"
-    policy = data.aws_iam_policy_document.s3_get_object_document_lambda2.json
+    policy = data.aws_iam_policy_document.s3_listbuckets_document_lambda2.json
 }
 ## Attach the S3 PUT object policy to the lambda2 iam role
 resource "aws_iam_role_policy_attachment" "s3_put_object_attachment_for_lambda2" {
