@@ -76,3 +76,8 @@ variable "lambda3_source_dir" {
     type = string
     default = "../python/lambda3"
 }
+
+variable "overwrite_awslayer_file" {
+    type = string
+    default = "../overwrite_awslayer.zip"
+}
