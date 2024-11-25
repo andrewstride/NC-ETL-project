@@ -60,7 +60,9 @@ def check_for_dim_date(s3):
     """
     try:
         logging.info("Checking for dim_date file in processing bucket")
-        response = s3.list_objects_v2(Bucket="nc-terraformers-processing").get("Contents")
+        response = s3.list_objects_v2(Bucket="nc-terraformers-processing").get(
+            "Contents"
+        )
         if response:
             bucket_files = [file.get("Key") for file in response]
             for item in bucket_files:
@@ -68,7 +70,6 @@ def check_for_dim_date(s3):
                     logging.info(f"dim_date file found: {item}")
                     return True
     except Exception as e:
-        logging.info("dim_date file not found")
         logging.warning("{e} encountered whilst searching for dim_date")
-        return False
-    
+    logging.info("dim_date file not found")
+    return False
