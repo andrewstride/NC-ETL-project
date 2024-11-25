@@ -70,3 +70,16 @@ resource "aws_iam_role_policy" "role_policy_for_lambda3_sns" {
     ]
   })
 }
+
+## Policy for lambda3, for lambda3 to get secret value
+resource "aws_iam_policy" "get_endpoint_secret_value_policy_for_lambda3" {
+    name = "get_endpoint_secret_value_policy_for_${var.lambda3_name}"
+    policy = data.aws_iam_policy_document.get_endpoint_secret_value_policy.json
+}
+
+
+## Attach the get secret value policy to the lambda3 iam role
+resource "aws_iam_role_policy_attachment" "get_secret_value_attachment_for_lambda3" {
+    role = aws_iam_role.role_for_lambda3.name
+    policy_arn = aws_iam_policy.get_endpoint_secret_value_policy_for_lambda3.arn
+}
