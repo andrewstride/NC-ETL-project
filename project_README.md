@@ -1,15 +1,17 @@
 # TerrificTotes Data Lakehouse Project
 
-This project is a data lakehouse, that takes data from an OLTP database (ToteSys), transforms it into a star-schema format, and places it within a OLAP data warehouse.
+This project is a data lakehouse, that **extracts** data from an OLTP database (ToteSys), **transforms** it into a star-schema format, and **loads** it within a OLAP data warehouse.
+
+![img](./mvp.png)
 
 The project has **two S3 buckets** - an ingestion bucket and a processing bucket.
 
 It also contains **three Lambdas**...
-- **Lambda1** - takes data from the OLTP ToteSys database, and places it as raw data, in csv format, in the ingestionb bucket.
+- **Lambda1** - extracts data from the OLTP ToteSys database, and places it as raw data, in csv format, in the ingestionb bucket.
 - **Lambda2** - takes data from the ingestion bucket, transforms it into star-schema format, and places it, as parquet format, in the processing bucket.
-- **Lambda3** - takes data from the processing bucket and places it within the OLAP data warehouse.
+- **Lambda3** - takes data from the processing bucket and loads it within the OLAP data warehouse.
 
-The Lambdas also have CloudWatch alerts, and if a serious alert is triggered, an email is sent to: TheTerraformers@protonmail.com.
+The Lambdas also have **CloudWatch alerts**, and if a serious alert is triggered, an **email** is sent to: TheTerraformers@protonmail.com.
 
 ## Usage
 
