@@ -1,8 +1,8 @@
-# TerrificTotes Data Lakehouse Project
+# TerrificTotes Data platform Project
 
-This project is a data lakehouse, that **extracts** data from an OLTP database (ToteSys), **transforms** it into a star-schema format, and **loads** it within a OLAP data warehouse.
+This project creates a data platform, that **extracts** data from an operational (OLTP) database (called ToteSys), **transforms** it into a star-schema format, stores in a data lake, and **loads** it within a OLAP data warehouse.
 
-![img](./mvp.png)
+![img](./project_diagram.jpeg)
 
 The project has **two S3 buckets** - an ingestion bucket and a processing bucket.
 
