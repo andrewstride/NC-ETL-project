@@ -57,14 +57,14 @@ def lambda_handler(event, context):
 
         logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
         if csv_files_written == {}:
-            finish = True
+            triggerLambda2 = False
         else:
-            finish = False
+            triggerLambda2 = True
         return {
             "response": 200,
             "csv_files_written": csv_files_written,
             "timestamp_json_files_written": timestamp_json_files_written,
-            "finish": finish
+            "triggerLambda2": triggerLambda2,
         }
 
     except Exception as e:

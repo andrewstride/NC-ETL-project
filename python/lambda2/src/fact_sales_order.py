@@ -1,4 +1,3 @@
-from src.utils import split_timestamp
 import pandas as pd
 import logging
 
@@ -57,8 +56,12 @@ def fact_sales_order(sales_df):
         output_df["unit_price"] = sales_df["unit_price"]
         output_df["currency_id"] = sales_df["currency_id"]
         output_df["design_id"] = sales_df["design_id"]
-        output_df["agreed_payment_date"] = pd.to_datetime(sales_df["agreed_payment_date"]).dt.date
-        output_df["agreed_delivery_date"] = pd.to_datetime(sales_df["agreed_delivery_date"]).dt.date
+        output_df["agreed_payment_date"] = pd.to_datetime(
+            sales_df["agreed_payment_date"]
+        ).dt.date
+        output_df["agreed_delivery_date"] = pd.to_datetime(
+            sales_df["agreed_delivery_date"]
+        ).dt.date
         output_df["agreed_delivery_location_id"] = sales_df[
             "agreed_delivery_location_id"
         ]
