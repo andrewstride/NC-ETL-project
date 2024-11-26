@@ -64,8 +64,8 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
       "Type": "Choice",
       "Choices": [
         {
-          "Variable": "$.finish",
-          "BooleanEquals": true,
+          "Variable": "$.triggerLambda2",
+          "BooleanEquals": false,
           "Next": "Success"
         }
       ],
