@@ -120,7 +120,7 @@ class TestDimCounterparty:
             "counterparty_legal_city",
             "counterparty_legal_postal_code",
             "counterparty_legal_country",
-            "counterparty_phone_number",
+            "counterparty_legal_phone_number",
         ]
         assert list(output.iloc[0]) == [
             1,

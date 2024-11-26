@@ -33,7 +33,7 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
 
   definition = <<EOF
 {
-  "Comment": "A description of my state machine",
+  "Comment": "Terraformers State Machine",
   "StartAt": "Invoke Lambda1",
   "States": {
     "Invoke Lambda1": {
@@ -58,7 +58,21 @@ resource "aws_sfn_state_machine" "sfn_state_machine" {
           "JitterStrategy": "FULL"
         }
       ],
-      "Next": "Invoke Lambda2"
+      "Next": "Choice"
+    },
+    "Choice": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.triggerLambda2",
+          "BooleanEquals": false,
+          "Next": "Success"
+        }
+      ],
+      "Default": "Invoke Lambda2"
+    },
+    "Success": {
+      "Type": "Succeed"
     },
     "Invoke Lambda2": {
       "Type": "Task",

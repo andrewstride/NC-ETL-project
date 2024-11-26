@@ -56,10 +56,15 @@ def lambda_handler(event, context):
                 logging.info(f"No new data in table {table} to upload.")
 
         logger.info(f"Lambda executed at {datetime.now()}", exc_info=True)
+        if csv_files_written == {}:
+            triggerLambda2 = False
+        else:
+            triggerLambda2 = True
         return {
             "response": 200,
             "csv_files_written": csv_files_written,
             "timestamp_json_files_written": timestamp_json_files_written,
+            "triggerLambda2": triggerLambda2,
         }
 
     except Exception as e:

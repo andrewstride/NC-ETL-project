@@ -43,11 +43,11 @@ def split_timestamp(timestamp):
     """Splits timestamp into date and time
 
     Args:
-        timestamp (timestamp): YYYY-MM-DD HH:MM:SS.US
+        timestamp (timestamp): YYYY-MM-DD HH:MM:SS
 
     Returns: [date, time]
     """
-    return [timestamp[:10], timestamp[11:]]
+    return [timestamp[:10], timestamp[11:19]]
 
 
 def check_for_dim_date(s3):
@@ -58,13 +58,18 @@ def check_for_dim_date(s3):
     Returns:
       (bool): dim_date file in processing bucket
     """
-    logging.info("Checking for dim_date file in processing bucket")
-    response = s3.list_objects_v2(Bucket="nc-terraformers-processing").get("Contents")
-    if response:
-        bucket_files = [file.get("Key") for file in response]
-        for item in bucket_files:
-            if item[: len("dim_date/dim_date")] == "dim_date/dim_date":
-                logging.info(f"dim_date file found: {item}")
-                return True
+    try:
+        logging.info("Checking for dim_date file in processing bucket")
+        response = s3.list_objects_v2(Bucket="nc-terraformers-processing").get(
+            "Contents"
+        )
+        if response:
+            bucket_files = [file.get("Key") for file in response]
+            for item in bucket_files:
+                if item[: len("dim_date/dim_date")] == "dim_date/dim_date":
+                    logging.info(f"dim_date file found: {item}")
+                    return True
+    except Exception as e:
+        logging.warning("{e} encountered whilst searching for dim_date")
     logging.info("dim_date file not found")
     return False

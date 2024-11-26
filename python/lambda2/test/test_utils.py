@@ -32,7 +32,7 @@ class TestSplitTimestamp:
 
     def test_returns_time(self):
         output = split_timestamp("2024-12-01 15:32:10.242324")
-        assert output[1] == "15:32:10.242324"
+        assert output[1] == "15:32:10"
 
 
 class TestCheckForDimDate:

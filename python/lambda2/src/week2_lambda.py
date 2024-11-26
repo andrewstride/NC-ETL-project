@@ -25,7 +25,8 @@ def lambda_handler(event, context):
     Event input:
     {"response": 200,
                 "csv_files_written": {table_name : csv_file_written, table_name : csv_file_written},
-                "timestamp_json_files_written": timestamp_json_files_written (list)}
+                "timestamp_json_files_written": timestamp_json_files_written (list),
+                "finish": bool}
 
     Returns:
     {"response": 200,
