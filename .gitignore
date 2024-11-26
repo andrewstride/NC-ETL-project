@@ -11,6 +11,7 @@ requirements.txt
 *test_timestamp_table.json*
 *.coverage*
 *test_table.json*
+*.ipynb_checkpoints
 
 #terraform
 **/.terraform*
