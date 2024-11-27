@@ -88,6 +88,6 @@ Contributors to the project in question are expected to...
 
 - Any additional library imports should be added to your branches requirements text file along with a brief comment (*In requirements*) specifying the need for said import (*If import is deemed unfit for any reason a removal of said import may be requested or a pull request may be refused in its entirety due to said import*).
 
-## List Of Known Issues
+## List of Known Issues
 
 ...
