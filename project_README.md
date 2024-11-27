@@ -79,3 +79,15 @@ Contributors to the project in question are expected to...
 - Alert fellow developers when any changes have been merged to main to aid in the prevention of any merge conflicts that could occur later in project dealings when meeting deadlines (*announce a new push and or merger in the slack channel provided*).
 
 - Code is thoroughly tested using pytest and elements of unittest before submission for merger.
+
+- Code is heavily scrutinized during review process before approval or denial.
+
+- If a pull request is refused please specify what the reasons were that brought forth this decision for the benefit of all fellow developers understanding.
+
+- Any difficulty understanding feature functionality should be reported to admin for a timely response within 24 hours providing clarity (*if the logistics have become clear before a response is given please make aware in a follow up message to the team admin*).
+
+- Any additional library imports should be added to your branches requirements text file along with a brief comment (*In requirements*) specifying the need for said import (*If import is deemed unfit for any reason a removal of said import may be requested or a pull request may be refused in its entirety due to said import*).
+
+## List Of Known Issues
+
+...
