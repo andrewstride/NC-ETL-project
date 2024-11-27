@@ -18,7 +18,8 @@ The Lambdas also has **CloudWatch alerts**, and if a serious alert is triggered 
 
 ## Visual Diagram
 
-![image](https://github.com/user-attachments/assets/73c4853d-c360-43f2-aada-76ad67c0fc55)
+![image](https://github.com/user-attachments/assets/c33c64f2-a473-420a-aa45-033201c809b8)
+
 
 
 **Brief** - Diagram depicting the internal workings and structure of the project.
