@@ -119,3 +119,8 @@ clean:
 						&& rm -rf terraform-remote-deployment/lambda2-layer \
 						&& rm -rf terraform-remote-deployment/lambda3-layer)
 
+# Notebook
+
+## Run jupyter
+notebook:
+	$(call execute_in_env, PYTHONPATH=${PYTHONPATH} jupyter lab)
