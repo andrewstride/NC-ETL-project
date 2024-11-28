@@ -14,11 +14,12 @@ It also contains **three Lambdas**...
 - **Lambda2** - takes data from the ingestion bucket, transforms it into star-schema format, and places it, as parquet format, in the processing bucket.
 - **Lambda3** - takes data from the processing bucket and loads it within the OLAP data warehouse.
 
-The Lambdas also has **CloudWatch alerts**, and if a serious alert is triggered an **email** is sent to: <TheTerraformers@protonmail.com>.
+The Lambdas also has **CloudWatch alerts**, and if a serious alert is triggered (an **email** is sent to: <TheTerraformers@protonmail.com>).
 
 ## Visual Diagram
 
-![img](./Project_diagram.jpeg)
+![image](https://github.com/user-attachments/assets/c33c64f2-a473-420a-aa45-033201c809b8)
+
 
 
 **Brief** - Diagram depicting the internal workings and structure of the project.
@@ -53,9 +54,9 @@ These instructions are geared towards the **contributors** (*how to build and in
 
 - **Testing**
 
-  Testing connections and util functions using the the test suite provided.
+  Testing connections and util functions using the the test suit provided.
 
-  - This should be done using the pytest libraries available along with some elements of unit testing used throughout the test suit (*No entries are eligible for merge without thorough testing accompanied*).
+  - This shout be done using the pytest libraries available along with some elements of unit testing used throughout the test suit (*No entries are eligible for merger without thoro testing accompanied*).
 
 - **Making Pull Requests**
 
@@ -88,3 +89,7 @@ Contributors to the project in question are expected to...
 - Any difficulty understanding feature functionality should be reported to admin for a timely response within 24 hours providing clarity (*if the logistics have become clear before a response is given please make aware in a follow up message to the team admin*).
 
 - Any additional library imports should be added to your branches requirements text file along with a brief comment (*In requirements*) specifying the need for said import (*If import is deemed unfit for any reason a removal of said import may be requested or a pull request may be refused in its entirety due to said import*).
+
+## List of Known Issues
+
+...
