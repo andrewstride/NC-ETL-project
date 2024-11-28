@@ -38,6 +38,7 @@ These instructions are geared towards the **contributors** (*how to build and in
   - **make run-checks** - runs checks on the project code (*security test, black, unit tests, and coverage checks*)
   - **make layer-setup** - prepare the lambda layers.
   - **make clean** - clean up the lambda layer dependencies.
+  - **make notebook** - starts up the Jupyter notebook environment for data analysis
   - **make all** - run all of the commands.
 
     Be sure to double check for sake of ensuring these commands are being executed within a contained virtual environment.
