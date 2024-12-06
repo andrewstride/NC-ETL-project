@@ -1,90 +1,121 @@
-# TerrificTotes Data platform Project
+
+# *TerrificTotes* Data platform Project
+
+![img](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![img](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
+![img](https://img.shields.io/badge/Github%20Actions-282a2e?style=for-the-badge&logo=githubactions&logoColor=367cfe)
+![img](https://img.shields.io/badge/coverage-95%25-green)
+
+
 
 ## Introduction
 
-This project creates a data platform, that **extracts** data from an operational (OLTP) database (called ToteSys), **transforms** it into a star-schema format, stores in a data lake, and **loads** it within a OLAP data warehouse.
+ETL Data Platform deployed using Terraform, AWS, CI/CD through Github, Python and SQL. Data is regularly extracted from OLTP database, transformed into a star-schema format and loaded into an OLAP data warehouse. Processes are logged and alerts are triggered in the event of an error.
 
-## About
+## Video Presentation
 
-The project has **two S3 buckets** - an ingestion bucket and a processing bucket.
-
-It also contains **three Lambdas**...
-
-- **Lambda1** - extracts data from the OLTP ToteSys database, and places it as raw data, in csv format, in the ingestion bucket.
-- **Lambda2** - takes data from the ingestion bucket, transforms it into star-schema format, and places it, as parquet format, in the processing bucket.
-- **Lambda3** - takes data from the processing bucket and loads it within the OLAP data warehouse.
-
-The Lambdas also has **CloudWatch alerts**, and if a serious alert is triggered an **email** is sent to: <TheTerraformers@protonmail.com>.
+Please watch this presentation on the details of the project: https://www.youtube.com/watch?v=9ZxfqiAg6XI&t=463s
 
 ## Visual Diagram
 
 ![img](./Project_diagram.jpeg)
 
+## Technologies
 
-**Brief** - Diagram depicting the internal workings and structure of the project.
+**Testing**
+
+PyTest for unit and integration testing
+
+Bandit for security testing - e.g. SQL injection prevention
+
+Pip-audit for testing package vulnerabilities
+
+Coverage (PyTest-cov) to ensure thorough testing (95% achieved)
+
+Postgres used to create test OLAP database
+
+**Within functions**
+
+Boto3 for interfacing with AWS
+PG8000 for interacting with the databases
+Pandas for manipulating data
+
+**AWS infrastructure**
+
+Lambda functions to run Python
+S3 storage buckets to contain data and code
+Cloudwatch to monitor logs
+Secrets Manager to hold database credentials
+
+**Deployment**
+
+Terraform - Infrastructure as Code to implement the AWS environment
+GitHub Actions - to enable Continuous Integration and Delivery
+
+# The 'Extract, Transform, Load' process
+
+**Extract**
+
+The first AWS Lambda function reads an S3 ‘ingestion’ bucket to see what the most up-to-date data is
+It then queries the Totesys database to collect any new data
+If there is new data, it is converted to CSV format, written to the S3, and the filename is passed to the second Lambda
+
+**Transform**
+
+The second Lambda function looks at each file and matches it to a transformation process for each particular table
+The star-schema format is a fact table for sales and dimension tables for locations, dates, departments, staff, designs and currency
+E.g. If data for a new member of staff has been added, the department table is joined on so that the department name can be included, the columns are rearranged and the Staff Dimension table is written to the S3 ‘processing’ bucket in Parquet format
+Details of the files written are passed on to the third Lambda
+
+**Load**
+
+The final Lambda function converts each file into a Pandas dataframe and inputs it to the Online Analytical Processing Data Warehouse
+
+**Automation**
+
+This process is automated with Eventbridge to run every 25 minutes to ensure all processes take place within a 30 minute window
+StepFunction is used so that if no new data is found by the first Lambda function, the process concludes without triggering the other functions - this reduces the computational cost
+
+**Continuous Integration and Deployment**
+
+Tests were automated through GitHub Actions every time a pull request was made into the main branch
+These ensured the code was secure, functional and formatted correctly before being integrated
 
 ## Developer Instructions
 
-These instructions are geared towards the **contributors** (*how to build and install the application **locally***).
+**Requirements**
+
+- an OLTP database following 'totesys' schema with regular data insertion
+- an OLAP database following 'totesys' schema
+- Database credentials need to be stored in AWS Secrets Manager
+- AWS account with IAM roles and permissions created
+- AWS permissions for Github Actions setup and credentials stored in Github Secrets
+- Terraform - https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+- Postgres with 'postgres' user and 'postgres' password for DB tests - https://www.postgresql.org/download/
 
 - **Running The Make File**
-
-    There are several make commands that can be run when using the project...
 
   - **make create-environment** - creates a virtual environment.
   - **make requirements** - downloads the relevant dependencies for the project.
   - **make dev-setup** - sets up dev requirements (*bandit, pip-audit, black*).
   - **make run-checks** - runs checks on the project code (*security test, black, unit tests, and coverage checks*)
+    - Test database requires
   - **make layer-setup** - prepare the lambda layers.
   - **make clean** - clean up the lambda layer dependencies.
   - **make all** - run all of the commands.
 
-    Be sure to double check for sake of ensuring these commands are being executed within a contained virtual environment.
+## The Terraformers Team
 
-- **Accessing Totesys database**
+This project was created by the Terraformers using Agile methods - standups, scrums and pair-programming
 
-  - Database is being operated from a remote server in which appropriate access credentials will be required.
+**The Team:**
 
-  - The database contents can be retrieved using the access credentials provided by the project admin (*please contact your team admin if not yet received access credential*).
+[Andrew](https://github.com/andrewstride)
 
-- **Environment Variables Required**
+[Arthur](https://github.com/eganiard)
 
-  A dotenv file will need to be created in order to house your access credentials used for connection to the database (*This should be included in your gitignore file by any means necessary*).
+[Daniel](https://github.com/DanielSolomon7)
 
-- **Testing**
+[Liam](https://github.com/studiobigli)
 
-  Testing connections and util functions using the the test suite provided.
-
-  - This should be done using the pytest libraries available along with some elements of unit testing used throughout the test suit (*No entries are eligible for merge without thorough testing accompanied*).
-
-- **Making Pull Requests**
-
-  When making a pull request here is how it should be done in regards to the current data platform application specifically...
-
-  - After you have liaised with fellow operatives (*one or more*) a pull request is then eligible for submission (*considering it meets all eligibility criteria*).
-
-  - The pull request will then be examined in further detail by another member of the group (*one or more*) were it will then be approved or refused (*during this time a comment will be made specifying the reasons for an approved or refused submission*).
-
-  - Successful submissions will then go on to be merged by the group admin.
-
-  - Unsuccessful submissions will have specifics as to why attached to the refusal note in the comment section and further addressing of the area mentioned there in is encouraged.
-
-  Please do not be discouraged by any refusal of submissions and further submissions are encouraged throughout the lifecycle of the project in question.
-
-## Expectations For Contributors
-
-Contributors to the project in question are expected to...
-
-- Be sure to create a separate branch before editing or adding of any functionality to any features currently in use on the main branch of the repository.
-
-- Alert fellow developers when any changes have been merged to main to aid in the prevention of any merge conflicts that could occur later in project dealings when meeting deadlines (*announce a new push and or merger in the slack channel provided*).
-
-- Code is thoroughly tested using pytest and elements of unittest before submission for merger.
-
-- Code is heavily scrutinized during review process before approval or denial.
-
-- If a pull request is refused please specify what the reasons were that brought forth this decision for the benefit of all fellow developers understanding.
-
-- Any difficulty understanding feature functionality should be reported to admin for a timely response within 24 hours providing clarity (*if the logistics have become clear before a response is given please make aware in a follow up message to the team admin*).
-
-- Any additional library imports should be added to your branches requirements text file along with a brief comment (*In requirements*) specifying the need for said import (*If import is deemed unfit for any reason a removal of said import may be requested or a pull request may be refused in its entirety due to said import*).
+[Shahanaz](https://github.com/Shahanaz012)
