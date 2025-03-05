@@ -18,7 +18,7 @@ Please watch this presentation on the details of the project: https://www.youtub
 
 ## Visual Diagram
 
-![img](./Project_diagram.jpeg)
+![img](./ETL-pipeline-diagram.png)
 
 ## Technologies
 
